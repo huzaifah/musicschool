@@ -8,7 +8,7 @@ on:
 
 env:
   DOTNET_VERSION: '10.0.x'
-  AZURE_WEBAPP_NAME: 'musicschool-blazor' # Replace with your actual App Service name if different
+  AZURE_WEBAPP_NAME: 'nadiritma'
   AZURE_WEBAPP_PACKAGE_PATH: './BlazorApp'
   PUBLISH_OUTPUT_PATH: './publish'
 
