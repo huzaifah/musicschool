@@ -1,5 +1,7 @@
 # Music Class Registration System
 
+[![Build and Deploy](https://github.com/huzaifah/musicschool/actions/workflows/azure-deploy.yml/badge.svg)](https://github.com/huzaifah/musicschool/actions/workflows/azure-deploy.yml)
+
 A Blazor Web App built with .NET 10 that allows the public to register for one-to-one music classes with professional instructors.
 
 ## Features
@@ -19,6 +21,12 @@ A Blazor Web App built with .NET 10 that allows the public to register for one-t
 - **Manage Instructors**: Full CRUD operations for instructor records
 - **Manage Classes**: Create, edit, and delete class schedules
 - **View All Bookings**: Monitor all bookings with search and cancellation capabilities
+
+## Live Demo
+
+🚀 **Live Application**: [https://nadiritma.azurewebsites.net](https://nadiritma.azurewebsites.net)
+
+The application is automatically deployed to Azure App Service via GitHub Actions on every push to the main branch.
 
 ## Technology Stack
 
@@ -212,6 +220,27 @@ Potential improvements for production:
 - [ ] Waitlist for popular classes
 - [ ] Reviews and ratings
 - [ ] File upload for instructor photos
+
+## Deployment
+
+### Current Deployment
+- **Platform**: Azure App Service (Free Tier)
+- **URL**: https://nadiritma.azurewebsites.net
+- **CI/CD**: GitHub Actions
+- **Auto-deploy**: Enabled on push to main branch
+
+### GitHub Actions Workflow
+The application uses automated CI/CD pipeline:
+- **Build**: Restore, build, test, and publish .NET 10 app
+- **Deploy**: Deploy to Azure App Service using publish profile
+- **Trigger**: Push to main branch or manual dispatch
+
+View workflow runs: [GitHub Actions](https://github.com/huzaifah/musicschool/actions)
+
+### Important Notes
+- **Database**: In-memory database (data resets on deployment/restart)
+- **Free Tier**: 60 min/day compute, may sleep after inactivity
+- **Cost**: $0/month
 
 ## License
 
