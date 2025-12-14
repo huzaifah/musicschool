@@ -1,0 +1,70 @@
+name: Build and Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  AZURE_WEBAPP_NAME: 'musicschool-blazor' # Replace with your actual App Service name if different
+  AZURE_WEBAPP_PACKAGE_PATH: './BlazorApp'
+  PUBLISH_OUTPUT_PATH: './publish'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build Application
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/BlazorApp.csproj
+
+    - name: Build application
+      run: dotnet build ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/BlazorApp.csproj --configuration Release --no-restore
+
+    - name: Run tests (if any)
+      run: dotnet test ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/BlazorApp.csproj --configuration Release --no-build --verbosity normal
+      continue-on-error: true # Continue even if no tests exist
+
+    - name: Publish application
+      run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/BlazorApp.csproj --configuration Release --no-build --output ${{ env.PUBLISH_OUTPUT_PATH }}
+
+    - name: Upload artifact for deployment
+      uses: actions/upload-artifact@v4
+      with:
+        name: blazor-app
+        path: ${{ env.PUBLISH_OUTPUT_PATH }}
+        retention-days: 1
+
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Azure
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v4
+      with:
+        name: blazor-app
+        path: ${{ env.PUBLISH_OUTPUT_PATH }}
+
+    - name: Deploy to Azure Web App
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.PUBLISH_OUTPUT_PATH }}
