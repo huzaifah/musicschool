@@ -93,3 +93,4 @@ ehthumbs.db
 
 # Claude AI
 .claude/
+azure-setup-commands.sh
