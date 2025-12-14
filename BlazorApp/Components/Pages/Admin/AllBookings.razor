@@ -1,0 +1,181 @@
+@page "/admin/bookings"
+@rendermode InteractiveServer
+@using BlazorApp.Data.Entities
+@using BlazorApp.Data.Enums
+@using BlazorApp.Services.Interfaces
+@inject IBookingService BookingService
+
+<PageTitle>All Bookings</PageTitle>
+
+<div class="container mt-4">
+    <h2>All Bookings</h2>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-@messageType alert-dismissible fade show">
+            @message
+            <button type="button" class="btn-close" @onclick="() => message = string.Empty"></button>
+        </div>
+    }
+
+    @if (bookings == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <span class="badge bg-success">@confirmedCount Confirmed</span>
+            <span class="badge bg-secondary ms-2">@cancelledCount Cancelled</span>
+            <span class="badge bg-info ms-2">@completedCount Completed</span>
+        </div>
+
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="Search by student name, email, or phone..."
+                   @bind="searchTerm" @bind:event="oninput" @bind:after="FilterBookings" />
+        </div>
+
+        @if (filteredBookings.Count == 0)
+        {
+            <div class="alert alert-info">No bookings found.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>Booking #</th>
+                            <th>Student</th>
+                            <th>Contact</th>
+                            <th>Instructor</th>
+                            <th>Class</th>
+                            <th>Date & Time</th>
+                            <th>Price</th>
+                            <th>Booked At</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in filteredBookings)
+                        {
+                            <tr>
+                                <td>#@booking.Id</td>
+                                <td>@booking.StudentName</td>
+                                <td>
+                                    <small>
+                                        @booking.StudentEmail<br />
+                                        @booking.StudentPhone
+                                    </small>
+                                </td>
+                                <td><small>@booking.MusicClass.Instructor.Name</small></td>
+                                <td><small>@booking.MusicClass.Instrument - @booking.MusicClass.Level</small></td>
+                                <td>
+                                    <small>
+                                        @booking.MusicClass.ScheduledDateTime.ToString("MMM dd, yyyy")<br />
+                                        @booking.MusicClass.ScheduledDateTime.ToString("hh:mm tt")
+                                    </small>
+                                </td>
+                                <td>$@booking.MusicClass.Price</td>
+                                <td><small>@booking.BookedAt.ToString("MMM dd, yyyy")</small></td>
+                                <td>
+                                    @if (booking.Status == BookingStatus.Confirmed)
+                                    {
+                                        <span class="badge bg-success">Confirmed</span>
+                                    }
+                                    else if (booking.Status == BookingStatus.Cancelled)
+                                    {
+                                        <span class="badge bg-secondary">Cancelled</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">@booking.Status</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (booking.Status == BookingStatus.Confirmed)
+                                    {
+                                        <button class="btn btn-sm btn-danger" @onclick="() => CancelBooking(booking.Id)">
+                                            Cancel
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<Booking>? bookings;
+    private List<Booking> filteredBookings = new();
+    private string searchTerm = "";
+    private int confirmedCount = 0;
+    private int cancelledCount = 0;
+    private int completedCount = 0;
+    private string message = "";
+    private string messageType = "success";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookings();
+    }
+
+    private async Task LoadBookings()
+    {
+        bookings = await BookingService.GetAllBookingsAsync();
+        confirmedCount = bookings.Count(b => b.Status == BookingStatus.Confirmed);
+        cancelledCount = bookings.Count(b => b.Status == BookingStatus.Cancelled);
+        completedCount = bookings.Count(b => b.Status == BookingStatus.Completed);
+        FilterBookings();
+    }
+
+    private void FilterBookings()
+    {
+        if (bookings == null)
+        {
+            filteredBookings = new();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            filteredBookings = bookings.OrderByDescending(b => b.BookedAt).ToList();
+        }
+        else
+        {
+            var term = searchTerm.ToLower();
+            filteredBookings = bookings
+                .Where(b =>
+                    b.StudentName.ToLower().Contains(term) ||
+                    b.StudentEmail.ToLower().Contains(term) ||
+                    b.StudentPhone.Contains(term))
+                .OrderByDescending(b => b.BookedAt)
+                .ToList();
+        }
+    }
+
+    private async Task CancelBooking(int bookingId)
+    {
+        try
+        {
+            await BookingService.CancelBookingAsync(bookingId);
+            message = "Booking cancelled successfully!";
+            messageType = "success";
+            await LoadBookings();
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+            messageType = "danger";
+        }
+    }
+}

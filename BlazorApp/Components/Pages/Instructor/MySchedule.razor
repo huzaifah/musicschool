@@ -1,0 +1,119 @@
+@page "/instructor/schedule"
+@rendermode InteractiveServer
+@using BlazorApp.Data.Entities
+@using BlazorApp.Data.Enums
+@using BlazorApp.Services.Interfaces
+@inject IClassService ClassService
+@inject IViewModeService ViewModeService
+
+<PageTitle>My Schedule</PageTitle>
+
+<div class="container mt-4">
+    <h2>My Schedule</h2>
+
+    @if (!ViewModeService.CurrentInstructorId.HasValue)
+    {
+        <div class="alert alert-warning">
+            Please select an instructor from the View Mode selector above.
+        </div>
+    }
+    else if (classes == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (classes.Count == 0)
+    {
+        <div class="alert alert-info">
+            No upcoming classes scheduled.
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <span class="badge bg-success">@availableCount Available</span>
+            <span class="badge bg-primary ms-2">@bookedCount Booked</span>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var musicClass in classes.OrderBy(c => c.ScheduledDateTime))
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 @(musicClass.Status == ClassStatus.Booked ? "border-primary" : "")">
+                        <div class="card-header @(musicClass.Status == ClassStatus.Booked ? "bg-primary text-white" : "")">
+                            <h6 class="mb-0">
+                                @musicClass.Instrument - @musicClass.Level
+                                @if (musicClass.Status == ClassStatus.Booked)
+                                {
+                                    <span class="badge bg-light text-primary float-end">Booked</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success float-end">Available</span>
+                                }
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                <strong>Date:</strong> @musicClass.ScheduledDateTime.ToString("MMM dd, yyyy")<br />
+                                <strong>Time:</strong> @musicClass.ScheduledDateTime.ToString("hh:mm tt")<br />
+                                <strong>Duration:</strong> @musicClass.DurationMinutes min<br />
+                                <strong>Price:</strong> $@musicClass.Price
+                            </p>
+
+                            @if (musicClass.Booking != null)
+                            {
+                                <hr />
+                                <p class="card-text small mb-0">
+                                    <strong>Student:</strong> @musicClass.Booking.StudentName<br />
+                                    <strong>Phone:</strong> @musicClass.Booking.StudentPhone<br />
+                                    <strong>Email:</strong> @musicClass.Booking.StudentEmail
+                                    @if (!string.IsNullOrEmpty(musicClass.Booking.Notes))
+                                    {
+                                        <br /><strong>Notes:</strong> @musicClass.Booking.Notes
+                                    }
+                                </p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<MusicClass>? classes;
+    private int availableCount = 0;
+    private int bookedCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSchedule();
+        ViewModeService.OnChange += OnViewModeChanged;
+    }
+
+    private async Task LoadSchedule()
+    {
+        if (ViewModeService.CurrentInstructorId.HasValue)
+        {
+            classes = await ClassService.GetClassesByInstructorAsync(ViewModeService.CurrentInstructorId.Value);
+            availableCount = classes.Count(c => c.Status == ClassStatus.Available);
+            bookedCount = classes.Count(c => c.Status == ClassStatus.Booked);
+        }
+    }
+
+    private async void OnViewModeChanged()
+    {
+        await LoadSchedule();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ViewModeService.OnChange -= OnViewModeChanged;
+    }
+}

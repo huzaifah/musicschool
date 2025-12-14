@@ -1,0 +1,164 @@
+@page "/admin/dashboard"
+@rendermode InteractiveServer
+@using BlazorApp.Services.Interfaces
+@inject IBookingService BookingService
+@inject IInstructorService InstructorService
+@inject IClassService ClassService
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<div class="container mt-4">
+    <h2>Admin Dashboard</h2>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Instructors</h5>
+                        <p class="display-4">@totalInstructors</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Available Classes</h5>
+                        <p class="display-4">@availableClasses</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Bookings</h5>
+                        <p class="display-4">@totalBookings</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Revenue</h5>
+                        <p class="display-4">$@totalRevenue.ToString("N0")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Popular Instruments</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (popularInstruments.Count == 0)
+                        {
+                            <p class="text-muted">No data available</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var instrument in popularInstruments.Take(5))
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        @instrument.Key
+                                        <span class="badge bg-primary rounded-pill">@instrument.Value bookings</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Recent Bookings</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (recentBookings.Count == 0)
+                        {
+                            <p class="text-muted">No recent bookings</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Class</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var booking in recentBookings.Take(5))
+                                        {
+                                            <tr>
+                                                <td>@booking.StudentName</td>
+                                                <td><small>@booking.MusicClass.Instrument</small></td>
+                                                <td><small>@booking.MusicClass.ScheduledDateTime.ToString("MMM dd")</small></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private int totalInstructors = 0;
+    private int availableClasses = 0;
+    private int totalBookings = 0;
+    private decimal totalRevenue = 0;
+    private Dictionary<string, int> popularInstruments = new();
+    private List<Data.Entities.Booking> recentBookings = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var instructors = await InstructorService.GetAllInstructorsAsync();
+        var classes = await ClassService.GetAvailableClassesAsync();
+        var bookings = await BookingService.GetAllBookingsAsync();
+
+        totalInstructors = instructors.Count;
+        availableClasses = classes.Count;
+        totalBookings = bookings.Count;
+        totalRevenue = bookings
+            .Where(b => b.Status == Data.Enums.BookingStatus.Confirmed)
+            .Sum(b => b.MusicClass.Price);
+
+        popularInstruments = bookings
+            .Where(b => b.Status == Data.Enums.BookingStatus.Confirmed)
+            .GroupBy(b => b.MusicClass.Instrument)
+            .ToDictionary(g => g.Key, g => g.Count())
+            .OrderByDescending(x => x.Value)
+            .ToDictionary(x => x.Key, x => x.Value);
+
+        recentBookings = bookings
+            .OrderByDescending(b => b.BookedAt)
+            .ToList();
+
+        isLoading = false;
+    }
+}

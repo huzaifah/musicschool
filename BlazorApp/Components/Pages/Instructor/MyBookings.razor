@@ -1,0 +1,134 @@
+@page "/instructor/bookings"
+@rendermode InteractiveServer
+@using BlazorApp.Data.Entities
+@using BlazorApp.Data.Enums
+@using BlazorApp.Services.Interfaces
+@inject IBookingService BookingService
+@inject IViewModeService ViewModeService
+
+<PageTitle>My Bookings</PageTitle>
+
+<div class="container mt-4">
+    <h2>My Bookings</h2>
+
+    @if (!ViewModeService.CurrentInstructorId.HasValue)
+    {
+        <div class="alert alert-warning">
+            Please select an instructor from the View Mode selector above.
+        </div>
+    }
+    else if (bookings == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (bookings.Count == 0)
+    {
+        <div class="alert alert-info">
+            No bookings found.
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <span class="badge bg-success">@confirmedCount Confirmed</span>
+            <span class="badge bg-secondary ms-2">@cancelledCount Cancelled</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Booking #</th>
+                        <th>Student</th>
+                        <th>Contact</th>
+                        <th>Class</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in bookings.OrderByDescending(b => b.MusicClass.ScheduledDateTime))
+                    {
+                        <tr>
+                            <td>#@booking.Id</td>
+                            <td>@booking.StudentName</td>
+                            <td>
+                                <small>
+                                    @booking.StudentEmail<br />
+                                    @booking.StudentPhone
+                                </small>
+                            </td>
+                            <td>@booking.MusicClass.Instrument - @booking.MusicClass.Level</td>
+                            <td>
+                                @booking.MusicClass.ScheduledDateTime.ToString("MMM dd, yyyy")<br />
+                                <small>@booking.MusicClass.ScheduledDateTime.ToString("hh:mm tt")</small>
+                            </td>
+                            <td>
+                                @if (booking.Status == BookingStatus.Confirmed)
+                                {
+                                    <span class="badge bg-success">Confirmed</span>
+                                }
+                                else if (booking.Status == BookingStatus.Cancelled)
+                                {
+                                    <span class="badge bg-secondary">Cancelled</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">@booking.Status</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(booking.Notes))
+                                {
+                                    <small>@booking.Notes</small>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">-</small>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Booking>? bookings;
+    private int confirmedCount = 0;
+    private int cancelledCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookings();
+        ViewModeService.OnChange += OnViewModeChanged;
+    }
+
+    private async Task LoadBookings()
+    {
+        if (ViewModeService.CurrentInstructorId.HasValue)
+        {
+            bookings = await BookingService.GetBookingsByInstructorAsync(ViewModeService.CurrentInstructorId.Value);
+            confirmedCount = bookings.Count(b => b.Status == BookingStatus.Confirmed);
+            cancelledCount = bookings.Count(b => b.Status == BookingStatus.Cancelled);
+        }
+    }
+
+    private async void OnViewModeChanged()
+    {
+        await LoadBookings();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ViewModeService.OnChange -= OnViewModeChanged;
+    }
+}

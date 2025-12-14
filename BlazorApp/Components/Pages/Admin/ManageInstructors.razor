@@ -1,0 +1,226 @@
+@page "/admin/instructors"
+@rendermode InteractiveServer
+@using BlazorApp.Data.Entities
+@using BlazorApp.Services.Interfaces
+@inject IInstructorService InstructorService
+
+<PageTitle>Manage Instructors</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Instructors</h2>
+        <button class="btn btn-primary" @onclick="ShowAddForm">
+            Add New Instructor
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-@messageType alert-dismissible fade show">
+            @message
+            <button type="button" class="btn-close" @onclick="() => message = string.Empty"></button>
+        </div>
+    }
+
+    @if (showForm)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>@(editingInstructor.Id == 0 ? "Add New" : "Edit") Instructor</h5>
+            </div>
+            <div class="card-body">
+                <EditForm Model="@editingInstructor" OnValidSubmit="SaveInstructor">
+                    <DataAnnotationsValidator />
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Name *</label>
+                            <InputText @bind-Value="editingInstructor.Name" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            <InputText @bind-Value="editingInstructor.Email" type="email" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone *</label>
+                            <InputText @bind-Value="editingInstructor.Phone" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Hourly Rate *</label>
+                            <InputNumber @bind-Value="editingInstructor.HourlyRate" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Specialization *</label>
+                        <InputText @bind-Value="editingInstructor.Specialization" class="form-control"
+                                  placeholder="e.g., Piano, Guitar" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Bio</label>
+                        <InputTextArea @bind-Value="editingInstructor.Bio" class="form-control" rows="3" />
+                    </div>
+                    <div class="mb-3 form-check">
+                        <InputCheckbox @bind-Value="editingInstructor.IsActive" class="form-check-input" id="isActive" />
+                        <label class="form-check-label" for="isActive">Active</label>
+                    </div>
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary ms-2" @onclick="CancelEdit">Cancel</button>
+                </EditForm>
+            </div>
+        </div>
+    }
+
+    @if (instructors == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (instructors.Count == 0)
+    {
+        <div class="alert alert-info">No instructors found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Specialization</th>
+                        <th>Contact</th>
+                        <th>Rate</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var instructor in instructors)
+                    {
+                        <tr>
+                            <td>@instructor.Name</td>
+                            <td>@instructor.Specialization</td>
+                            <td>
+                                <small>
+                                    @instructor.Email<br />
+                                    @instructor.Phone
+                                </small>
+                            </td>
+                            <td>$@instructor.HourlyRate/hr</td>
+                            <td>
+                                @if (instructor.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" @onclick="() => EditInstructor(instructor)">
+                                    Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger ms-1" @onclick="() => DeleteInstructor(instructor.Id)">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Instructor>? instructors;
+    private Instructor editingInstructor = new();
+    private bool showForm = false;
+    private string message = "";
+    private string messageType = "success";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInstructors();
+    }
+
+    private async Task LoadInstructors()
+    {
+        instructors = await InstructorService.GetAllInstructorsAsync();
+    }
+
+    private void ShowAddForm()
+    {
+        editingInstructor = new Instructor { IsActive = true };
+        showForm = true;
+    }
+
+    private void EditInstructor(Instructor instructor)
+    {
+        editingInstructor = new Instructor
+        {
+            Id = instructor.Id,
+            Name = instructor.Name,
+            Email = instructor.Email,
+            Phone = instructor.Phone,
+            Bio = instructor.Bio,
+            Specialization = instructor.Specialization,
+            HourlyRate = instructor.HourlyRate,
+            ImageUrl = instructor.ImageUrl,
+            IsActive = instructor.IsActive
+        };
+        showForm = true;
+    }
+
+    private async Task SaveInstructor()
+    {
+        try
+        {
+            if (editingInstructor.Id == 0)
+            {
+                await InstructorService.CreateInstructorAsync(editingInstructor);
+                message = "Instructor added successfully!";
+            }
+            else
+            {
+                await InstructorService.UpdateInstructorAsync(editingInstructor);
+                message = "Instructor updated successfully!";
+            }
+
+            messageType = "success";
+            showForm = false;
+            await LoadInstructors();
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+            messageType = "danger";
+        }
+    }
+
+    private void CancelEdit()
+    {
+        showForm = false;
+        editingInstructor = new();
+    }
+
+    private async Task DeleteInstructor(int id)
+    {
+        try
+        {
+            await InstructorService.DeleteInstructorAsync(id);
+            message = "Instructor deleted successfully!";
+            messageType = "success";
+            await LoadInstructors();
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+            messageType = "danger";
+        }
+    }
+}

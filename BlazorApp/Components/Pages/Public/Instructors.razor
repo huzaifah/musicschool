@@ -1,0 +1,56 @@
+@page "/instructors"
+@using BlazorApp.Data.Entities
+@using BlazorApp.Services.Interfaces
+@inject IInstructorService InstructorService
+
+<PageTitle>Our Instructors</PageTitle>
+
+<div class="container mt-4">
+    <h2>Meet Our Instructors</h2>
+
+    @if (instructors == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (instructors.Count == 0)
+    {
+        <div class="alert alert-info">
+            No instructors available at the moment.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 mt-3">
+            @foreach (var instructor in instructors)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h4 class="card-title">@instructor.Name</h4>
+                            <h6 class="card-subtitle mb-3 text-muted">@instructor.Specialization</h6>
+                            <p class="card-text">@instructor.Bio</p>
+                            <p class="card-text">
+                                <strong>Rate:</strong> $@instructor.HourlyRate/hour<br />
+                                <strong>Email:</strong> @instructor.Email<br />
+                                <strong>Phone:</strong> @instructor.Phone
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Instructor>? instructors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        instructors = await InstructorService.GetActiveInstructorsAsync();
+    }
+}

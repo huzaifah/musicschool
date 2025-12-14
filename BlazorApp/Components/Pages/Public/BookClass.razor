@@ -1,0 +1,181 @@
+@page "/book-class/{ClassId:int}"
+@rendermode InteractiveServer
+@using BlazorApp.Data.Entities
+@using BlazorApp.Models.DTOs
+@using BlazorApp.Services.Interfaces
+@using System.ComponentModel.DataAnnotations
+@inject IClassService ClassService
+@inject IBookingService BookingService
+@inject NavigationManager Navigation
+
+<PageTitle>Book Class</PageTitle>
+
+<div class="container mt-4">
+    <h2>Book Your Class</h2>
+
+    @if (musicClass == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!isAvailable)
+    {
+        <div class="alert alert-danger">
+            Sorry, this class is no longer available for booking.
+        </div>
+        <a href="/browse-classes" class="btn btn-primary">Browse Other Classes</a>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Class Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Instrument:</strong> @musicClass.Instrument</p>
+                        <p><strong>Level:</strong> @musicClass.Level</p>
+                        <p><strong>Instructor:</strong> @musicClass.Instructor.Name</p>
+                        <p><strong>Date:</strong> @musicClass.ScheduledDateTime.ToString("MMMM dd, yyyy")</p>
+                        <p><strong>Time:</strong> @musicClass.ScheduledDateTime.ToString("hh:mm tt")</p>
+                        <p><strong>Duration:</strong> @musicClass.DurationMinutes minutes</p>
+                        <p><strong>Price:</strong> $@musicClass.Price</p>
+                        <p class="mb-0"><strong>Description:</strong> @musicClass.Description</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Your Information</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger">@errorMessage</div>
+                        }
+
+                        <EditForm Model="@bookingRequest" OnValidSubmit="SubmitBooking">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <InputText @bind-Value="bookingRequest.StudentName" class="form-control" />
+                                <ValidationMessage For="@(() => bookingRequest.StudentName)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email Address *</label>
+                                <InputText @bind-Value="bookingRequest.StudentEmail" type="email" class="form-control" />
+                                <ValidationMessage For="@(() => bookingRequest.StudentEmail)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                <InputText @bind-Value="bookingRequest.StudentPhone" class="form-control" />
+                                <ValidationMessage For="@(() => bookingRequest.StudentPhone)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Notes (Optional)</label>
+                                <InputTextArea @bind-Value="bookingRequest.Notes" class="form-control" rows="3"
+                                              placeholder="Any special requests or information for the instructor" />
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <text>Processing...</text>
+                                }
+                                else
+                                {
+                                    <text>Confirm Booking</text>
+                                }
+                            </button>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int ClassId { get; set; }
+
+    private MusicClass? musicClass;
+    private bool isAvailable = true;
+    private bool isSubmitting = false;
+    private string errorMessage = "";
+
+    private BookingRequestModel bookingRequest = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        musicClass = await ClassService.GetClassByIdAsync(ClassId);
+
+        if (musicClass != null)
+        {
+            isAvailable = await BookingService.ValidateBookingAsync(ClassId);
+            bookingRequest.MusicClassId = ClassId;
+        }
+        else
+        {
+            isAvailable = false;
+        }
+    }
+
+    private async Task SubmitBooking()
+    {
+        isSubmitting = true;
+        errorMessage = "";
+
+        try
+        {
+            var request = new BookingRequest
+            {
+                MusicClassId = bookingRequest.MusicClassId,
+                StudentName = bookingRequest.StudentName,
+                StudentEmail = bookingRequest.StudentEmail,
+                StudentPhone = bookingRequest.StudentPhone,
+                Notes = bookingRequest.Notes
+            };
+
+            var booking = await BookingService.CreateBookingAsync(request);
+            Navigation.NavigateTo($"/booking-confirmation/{booking.Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            isSubmitting = false;
+        }
+    }
+
+    private class BookingRequestModel
+    {
+        public int MusicClassId { get; set; }
+
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters")]
+        public string StudentName { get; set; } = "";
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string StudentEmail { get; set; } = "";
+
+        [Required(ErrorMessage = "Phone number is required")]
+        [Phone(ErrorMessage = "Invalid phone number")]
+        public string StudentPhone { get; set; } = "";
+
+        [StringLength(500, ErrorMessage = "Notes must be less than 500 characters")]
+        public string? Notes { get; set; }
+    }
+}

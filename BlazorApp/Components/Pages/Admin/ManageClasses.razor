@@ -1,0 +1,281 @@
+@page "/admin/classes"
+@rendermode InteractiveServer
+@using BlazorApp.Data.Entities
+@using BlazorApp.Data.Enums
+@using BlazorApp.Services.Interfaces
+@inject IClassService ClassService
+@inject IInstructorService InstructorService
+
+<PageTitle>Manage Classes</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Classes</h2>
+        <button class="btn btn-primary" @onclick="ShowAddForm">
+            Add New Class
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-@messageType alert-dismissible fade show">
+            @message
+            <button type="button" class="btn-close" @onclick="() => message = string.Empty"></button>
+        </div>
+    }
+
+    @if (showForm)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>@(editingClass.Id == 0 ? "Add New" : "Edit") Class</h5>
+            </div>
+            <div class="card-body">
+                <EditForm Model="@editingClass" OnValidSubmit="SaveClass">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Instructor *</label>
+                            <InputSelect @bind-Value="editingClass.InstructorId" class="form-select">
+                                <option value="0">-- Select Instructor --</option>
+                                @foreach (var instructor in instructors)
+                                {
+                                    <option value="@instructor.Id">@instructor.Name</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Instrument *</label>
+                            <InputText @bind-Value="editingClass.Instrument" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Skill Level *</label>
+                            <InputSelect @bind-Value="editingClass.Level" class="form-select">
+                                <option value="@SkillLevel.Beginner">Beginner</option>
+                                <option value="@SkillLevel.Intermediate">Intermediate</option>
+                                <option value="@SkillLevel.Advanced">Advanced</option>
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Duration (minutes) *</label>
+                            <InputNumber @bind-Value="editingClass.DurationMinutes" class="form-control" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Price *</label>
+                            <InputNumber @bind-Value="editingClass.Price" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Scheduled Date & Time *</label>
+                            <InputDate @bind-Value="scheduledDate" class="form-control" Type="InputDateType.DateTimeLocal" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status *</label>
+                            <InputSelect @bind-Value="editingClass.Status" class="form-select">
+                                <option value="@ClassStatus.Available">Available</option>
+                                <option value="@ClassStatus.Booked">Booked</option>
+                                <option value="@ClassStatus.Cancelled">Cancelled</option>
+                                <option value="@ClassStatus.Completed">Completed</option>
+                            </InputSelect>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <InputTextArea @bind-Value="editingClass.Description" class="form-control" rows="3" />
+                    </div>
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary ms-2" @onclick="CancelEdit">Cancel</button>
+                </EditForm>
+            </div>
+        </div>
+    }
+
+    @if (classes == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (classes.Count == 0)
+    {
+        <div class="alert alert-info">No classes found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th>Instructor</th>
+                        <th>Instrument</th>
+                        <th>Level</th>
+                        <th>Date & Time</th>
+                        <th>Duration</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var musicClass in classes.OrderBy(c => c.ScheduledDateTime).Take(50))
+                    {
+                        <tr>
+                            <td><small>@musicClass.Instructor.Name</small></td>
+                            <td>@musicClass.Instrument</td>
+                            <td><small>@musicClass.Level</small></td>
+                            <td>
+                                <small>
+                                    @musicClass.ScheduledDateTime.ToString("MMM dd, yyyy")<br />
+                                    @musicClass.ScheduledDateTime.ToString("hh:mm tt")
+                                </small>
+                            </td>
+                            <td><small>@musicClass.DurationMinutes min</small></td>
+                            <td>$@musicClass.Price</td>
+                            <td>
+                                @if (musicClass.Status == ClassStatus.Available)
+                                {
+                                    <span class="badge bg-success">Available</span>
+                                }
+                                else if (musicClass.Status == ClassStatus.Booked)
+                                {
+                                    <span class="badge bg-primary">Booked</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@musicClass.Status</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" @onclick="() => EditClass(musicClass)">Edit</button>
+                                <button class="btn btn-sm btn-danger ms-1" @onclick="() => DeleteClass(musicClass.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (classes.Count > 50)
+        {
+            <p class="text-muted">Showing first 50 classes</p>
+        }
+    }
+</div>
+
+@code {
+    private List<MusicClass>? classes;
+    private List<Instructor> instructors = new();
+    private MusicClass editingClass = new();
+    private DateTime scheduledDate = DateTime.Now.AddDays(1);
+    private bool showForm = false;
+    private string message = "";
+    private string messageType = "success";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        instructors = await InstructorService.GetAllInstructorsAsync();
+        classes = (await ClassService.GetAvailableClassesAsync())
+            .Concat(await GetAllClasses())
+            .DistinctBy(c => c.Id)
+            .ToList();
+    }
+
+    private async Task<List<MusicClass>> GetAllClasses()
+    {
+        var allClasses = new List<MusicClass>();
+        foreach (var instructor in instructors)
+        {
+            var instructorClasses = await ClassService.GetClassesByInstructorAsync(instructor.Id);
+            allClasses.AddRange(instructorClasses);
+        }
+        return allClasses.DistinctBy(c => c.Id).ToList();
+    }
+
+    private void ShowAddForm()
+    {
+        editingClass = new MusicClass
+        {
+            DurationMinutes = 60,
+            Status = ClassStatus.Available,
+            Level = SkillLevel.Beginner
+        };
+        scheduledDate = DateTime.Now.AddDays(1);
+        showForm = true;
+    }
+
+    private void EditClass(MusicClass musicClass)
+    {
+        editingClass = new MusicClass
+        {
+            Id = musicClass.Id,
+            InstructorId = musicClass.InstructorId,
+            Instrument = musicClass.Instrument,
+            Level = musicClass.Level,
+            ScheduledDateTime = musicClass.ScheduledDateTime,
+            DurationMinutes = musicClass.DurationMinutes,
+            Price = musicClass.Price,
+            Description = musicClass.Description,
+            Status = musicClass.Status
+        };
+        scheduledDate = musicClass.ScheduledDateTime;
+        showForm = true;
+    }
+
+    private async Task SaveClass()
+    {
+        try
+        {
+            editingClass.ScheduledDateTime = scheduledDate;
+
+            if (editingClass.Id == 0)
+            {
+                await ClassService.CreateClassAsync(editingClass);
+                message = "Class added successfully!";
+            }
+            else
+            {
+                await ClassService.UpdateClassAsync(editingClass);
+                message = "Class updated successfully!";
+            }
+
+            messageType = "success";
+            showForm = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+            messageType = "danger";
+        }
+    }
+
+    private void CancelEdit()
+    {
+        showForm = false;
+        editingClass = new();
+    }
+
+    private async Task DeleteClass(int id)
+    {
+        try
+        {
+            await ClassService.DeleteClassAsync(id);
+            message = "Class deleted successfully!";
+            messageType = "success";
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+            messageType = "danger";
+        }
+    }
+}

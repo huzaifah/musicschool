@@ -1,0 +1,77 @@
+@rendermode InteractiveServer
+@using BlazorApp.Models
+@using BlazorApp.Services.Interfaces
+@inject IViewModeService ViewModeService
+@inject IInstructorService InstructorService
+@implements IDisposable
+
+<div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-2">
+        <label class="mb-0 small text-nowrap">View Mode:</label>
+        <select class="form-select form-select-sm" style="width: auto;" @bind="selectedMode" @bind:after="OnViewModeChanged">
+            <option value="@ViewMode.Public">Student (Public)</option>
+            <option value="@ViewMode.Instructor">Instructor</option>
+            <option value="@ViewMode.Admin">Admin</option>
+        </select>
+    </div>
+
+    @if (selectedMode == ViewMode.Instructor)
+    {
+        <div class="d-flex align-items-center gap-2">
+            <label class="mb-0 small text-nowrap">Instructor:</label>
+            <select class="form-select form-select-sm" style="width: auto;" @bind="selectedInstructorId" @bind:after="OnInstructorChanged">
+                <option value="">-- Select --</option>
+                @foreach (var instructor in instructors)
+                {
+                    <option value="@instructor.Id">@instructor.Name</option>
+                }
+            </select>
+        </div>
+    }
+</div>
+
+@code {
+    private ViewMode selectedMode = ViewMode.Public;
+    private string selectedInstructorId = "";
+    private List<Data.Entities.Instructor> instructors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        selectedMode = ViewModeService.CurrentMode;
+        instructors = await InstructorService.GetActiveInstructorsAsync();
+
+        if (ViewModeService.CurrentInstructorId.HasValue)
+        {
+            selectedInstructorId = ViewModeService.CurrentInstructorId.Value.ToString();
+        }
+
+        ViewModeService.OnChange += StateHasChanged;
+    }
+
+    private void OnViewModeChanged()
+    {
+        ViewModeService.SetViewMode(selectedMode);
+        if (selectedMode != ViewMode.Instructor)
+        {
+            selectedInstructorId = "";
+        }
+    }
+
+    private void OnInstructorChanged()
+    {
+        if (int.TryParse(selectedInstructorId, out int instructorId))
+        {
+            ViewModeService.CurrentInstructorId = instructorId;
+        }
+        else
+        {
+            ViewModeService.CurrentInstructorId = null;
+        }
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ViewModeService.OnChange -= StateHasChanged;
+    }
+}

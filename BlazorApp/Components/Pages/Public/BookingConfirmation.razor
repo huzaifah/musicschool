@@ -1,0 +1,82 @@
+@page "/booking-confirmation/{BookingId:int}"
+@using BlazorApp.Data.Entities
+@using BlazorApp.Services.Interfaces
+@inject IBookingService BookingService
+
+<PageTitle>Booking Confirmed</PageTitle>
+
+<div class="container mt-4">
+    @if (booking == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-check-circle-fill text-success" viewBox="0 0 16 16">
+                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-success">Booking Confirmed!</h2>
+                        <p class="lead">Your music class has been successfully booked.</p>
+
+                        <div class="card mt-4 text-start">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Booking Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Student:</strong> @booking.StudentName</p>
+                                <p><strong>Email:</strong> @booking.StudentEmail</p>
+                                <p><strong>Phone:</strong> @booking.StudentPhone</p>
+                                <hr />
+                                <p><strong>Class:</strong> @booking.MusicClass.Instrument - @booking.MusicClass.Level</p>
+                                <p><strong>Instructor:</strong> @booking.MusicClass.Instructor.Name</p>
+                                <p><strong>Date:</strong> @booking.MusicClass.ScheduledDateTime.ToString("MMMM dd, yyyy")</p>
+                                <p><strong>Time:</strong> @booking.MusicClass.ScheduledDateTime.ToString("hh:mm tt")</p>
+                                <p><strong>Duration:</strong> @booking.MusicClass.DurationMinutes minutes</p>
+                                <p><strong>Price:</strong> $@booking.MusicClass.Price</p>
+                                @if (!string.IsNullOrEmpty(booking.Notes))
+                                {
+                                    <hr />
+                                    <p><strong>Your Notes:</strong> @booking.Notes</p>
+                                }
+                                <hr />
+                                <p class="mb-0"><strong>Booking Reference:</strong> #@booking.Id</p>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <strong>What's Next?</strong><br />
+                            You will receive a confirmation email shortly. Please arrive 5 minutes early for your class.
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="/browse-classes" class="btn btn-primary me-2">Book Another Class</a>
+                            <a href="/" class="btn btn-outline-secondary">Return Home</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int BookingId { get; set; }
+
+    private Booking? booking;
+
+    protected override async Task OnInitializedAsync()
+    {
+        booking = await BookingService.GetBookingByIdAsync(BookingId);
+    }
+}

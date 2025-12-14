@@ -1,0 +1,115 @@
+@page "/browse-classes"
+@rendermode InteractiveServer
+@using BlazorApp.Data.Entities
+@using BlazorApp.Data.Enums
+@using BlazorApp.Services.Interfaces
+@inject IClassService ClassService
+@inject NavigationManager Navigation
+
+<PageTitle>Browse Classes</PageTitle>
+
+<div class="container mt-4">
+    <h2>Browse Available Classes</h2>
+
+    @if (classes == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label class="form-label">Filter by Instrument</label>
+                <select class="form-select" @bind="selectedInstrument" @bind:after="FilterClasses">
+                    <option value="">All Instruments</option>
+                    @foreach (var instrument in availableInstruments)
+                    {
+                        <option value="@instrument">@instrument</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Filter by Skill Level</label>
+                <select class="form-select" @bind="selectedLevel" @bind:after="FilterClasses">
+                    <option value="">All Levels</option>
+                    <option value="@SkillLevel.Beginner">Beginner</option>
+                    <option value="@SkillLevel.Intermediate">Intermediate</option>
+                    <option value="@SkillLevel.Advanced">Advanced</option>
+                </select>
+            </div>
+        </div>
+
+        @if (filteredClasses.Count == 0)
+        {
+            <div class="alert alert-info">
+                No classes available matching your filters. Try adjusting your search criteria.
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var musicClass in filteredClasses)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">@musicClass.Instrument - @musicClass.Level</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">@musicClass.Instructor.Name</h6>
+                                <p class="card-text">
+                                    <strong>Date:</strong> @musicClass.ScheduledDateTime.ToString("MMM dd, yyyy")<br />
+                                    <strong>Time:</strong> @musicClass.ScheduledDateTime.ToString("hh:mm tt")<br />
+                                    <strong>Duration:</strong> @musicClass.DurationMinutes minutes<br />
+                                    <strong>Price:</strong> $@musicClass.Price
+                                </p>
+                                <p class="card-text small">@musicClass.Description</p>
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-primary w-100" @onclick="() => BookClass(musicClass.Id)">
+                                    Book Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<MusicClass>? classes;
+    private List<MusicClass> filteredClasses = new();
+    private List<string> availableInstruments = new();
+    private string selectedInstrument = "";
+    private string selectedLevel = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        classes = await ClassService.GetAvailableClassesAsync();
+        availableInstruments = await ClassService.GetAvailableInstrumentsAsync();
+        FilterClasses();
+    }
+
+    private void FilterClasses()
+    {
+        if (classes == null)
+        {
+            filteredClasses = new();
+            return;
+        }
+
+        filteredClasses = classes.Where(c =>
+            (string.IsNullOrEmpty(selectedInstrument) || c.Instrument == selectedInstrument) &&
+            (string.IsNullOrEmpty(selectedLevel) || c.Level.ToString() == selectedLevel)
+        ).ToList();
+    }
+
+    private void BookClass(int classId)
+    {
+        Navigation.NavigateTo($"/book-class/{classId}");
+    }
+}
