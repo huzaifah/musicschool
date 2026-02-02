@@ -8,7 +8,7 @@ public static class TestDataBuilder
 {
     public static Registration CreateTestRegistration(
         Guid? id = null,
-        string referenceNumber = "NADIRITMA-KB-2026-001",
+        string referenceNumber = "NR-TEST1234",
         string studentName = "Ahmad bin Ali",
         DateOnly? dateOfBirth = null,
         Gender gender = Gender.Lelaki,

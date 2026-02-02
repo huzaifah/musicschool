@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using BlazorApp.Data;
 using BlazorApp.Data.Entities;
 using BlazorApp.Data.Enums;
@@ -13,6 +14,7 @@ namespace BlazorApp.Services.Implementation;
 public class RegistrationService : IRegistrationService
 {
     private readonly ApplicationDbContext _context;
+    private const string AllowedChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     public RegistrationService(ApplicationDbContext context)
     {
@@ -66,26 +68,30 @@ public class RegistrationService : IRegistrationService
 
     public async Task<string> GenerateReferenceNumberAsync()
     {
-        var year = DateTime.UtcNow.Year;
-        var prefix = $"NADIRITMA-KB-{year}-";
+        string referenceNumber;
+        bool exists;
 
-        var lastRegistration = await _context.Registrations
-            .AsNoTracking()
-            .Where(r => r.ReferenceNumber.StartsWith(prefix))
-            .OrderByDescending(r => r.ReferenceNumber)
-            .FirstOrDefaultAsync();
-
-        int nextNumber = 1;
-
-        if (lastRegistration != null)
+        do
         {
-            var lastNumberStr = lastRegistration.ReferenceNumber.Replace(prefix, "");
-            if (int.TryParse(lastNumberStr, out var lastNumber))
-            {
-                nextNumber = lastNumber + 1;
-            }
+            referenceNumber = GenerateSecureReference();
+            exists = await _context.Registrations
+                .AsNoTracking()
+                .AnyAsync(r => r.ReferenceNumber == referenceNumber);
+        } while (exists);
+
+        return referenceNumber;
+    }
+
+    private static string GenerateSecureReference()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(8);
+        var chars = new char[8];
+
+        for (int i = 0; i < 8; i++)
+        {
+            chars[i] = AllowedChars[bytes[i] % AllowedChars.Length];
         }
 
-        return $"{prefix}{nextNumber:D3}";
+        return $"NR-{new string(chars)}";
     }
 }

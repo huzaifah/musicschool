@@ -24,7 +24,8 @@ public class RegistrationServiceTests
         result.GuardianEmail.Should().Be(model.GuardianEmail);
         result.ClassSlot.Should().Be(model.ClassSlot);
         result.Status.Should().Be(RegistrationStatus.Pending);
-        result.ReferenceNumber.Should().StartWith("NADIRITMA-KB-");
+        result.ReferenceNumber.Should().StartWith("NR-");
+        result.ReferenceNumber.Should().HaveLength(11); // NR- + 8 chars
     }
 
     [Fact]
@@ -49,18 +50,18 @@ public class RegistrationServiceTests
     {
         // Arrange
         var registration = TestDataBuilder.CreateTestRegistration(
-            referenceNumber: "NADIRITMA-KB-2026-999");
+            referenceNumber: "NR-ABC12345");
         using var context = MockDbContextFactory.CreateMockContextWithData(
             registrations: [registration]);
         var service = new RegistrationService(context);
 
         // Act
-        var result = await service.GetByReferenceAsync("NADIRITMA-KB-2026-999");
+        var result = await service.GetByReferenceAsync("NR-ABC12345");
 
         // Assert
         result.Should().NotBeNull();
         result!.StudentName.Should().Be(registration.StudentName);
-        result.ReferenceNumber.Should().Be("NADIRITMA-KB-2026-999");
+        result.ReferenceNumber.Should().Be("NR-ABC12345");
     }
 
     [Fact]
@@ -71,7 +72,7 @@ public class RegistrationServiceTests
         var service = new RegistrationService(context);
 
         // Act
-        var result = await service.GetByReferenceAsync("NADIRITMA-KB-2026-999");
+        var result = await service.GetByReferenceAsync("NR-NOTEXIST");
 
         // Assert
         result.Should().BeNull();
@@ -83,32 +84,33 @@ public class RegistrationServiceTests
         // Arrange
         using var context = MockDbContextFactory.CreateMockContext();
         var service = new RegistrationService(context);
-        var currentYear = DateTime.UtcNow.Year;
 
         // Act
         var result = await service.GenerateReferenceNumberAsync();
 
         // Assert
-        result.Should().StartWith($"NADIRITMA-KB-{currentYear}-");
-        result.Should().EndWith("001");
+        result.Should().StartWith("NR-");
+        result.Should().HaveLength(11); // NR- + 8 chars
+        result[3..].Should().MatchRegex("^[A-Z2-9]{8}$"); // Only allowed chars
     }
 
     [Fact]
-    public async Task GenerateReferenceNumberAsync_ShouldIncrementNumber_WhenExistingRegistrations()
+    public async Task GenerateReferenceNumberAsync_ShouldGenerateUniqueNumbers()
     {
         // Arrange
-        var currentYear = DateTime.UtcNow.Year;
-        var existingRegistration = TestDataBuilder.CreateTestRegistration(
-            referenceNumber: $"NADIRITMA-KB-{currentYear}-005");
-        using var context = MockDbContextFactory.CreateMockContextWithData(
-            registrations: [existingRegistration]);
+        using var context = MockDbContextFactory.CreateMockContext();
         var service = new RegistrationService(context);
 
         // Act
-        var result = await service.GenerateReferenceNumberAsync();
+        var references = new HashSet<string>();
+        for (int i = 0; i < 100; i++)
+        {
+            var reference = await service.GenerateReferenceNumberAsync();
+            references.Add(reference);
+        }
 
-        // Assert
-        result.Should().Be($"NADIRITMA-KB-{currentYear}-006");
+        // Assert - all 100 should be unique
+        references.Should().HaveCount(100);
     }
 
     [Fact]
