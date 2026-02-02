@@ -1,0 +1,342 @@
+@page "/daftar"
+@layout BlazorApp.Components.Layout.RegistrationLayout
+@using BlazorApp.Models
+@using BlazorApp.Services.Interfaces
+@using BlazorApp.Components.Registration
+@inject IFormStateService FormStateService
+@inject IRegistrationService RegistrationService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Daftar - NADIRITMA</PageTitle>
+
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h1 style="color: var(--kawaii-pink-dark); font-weight: 700;">
+            <span class="me-2">📝</span>Borang Pendaftaran
+        </h1>
+        <p class="text-muted">Kelas Muzik Keyboard NADIRITMA</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <ProgressBar CurrentStep="currentStep" />
+
+            <EditForm Model="formModel" OnValidSubmit="HandleValidSubmit" FormName="registrationForm">
+                <DataAnnotationsValidator />
+
+                @if (currentStep == 1)
+                {
+                    <Step1_Student Model="formModel" />
+                }
+                else if (currentStep == 2)
+                {
+                    <Step2_Guardian Model="formModel" />
+                }
+                else if (currentStep == 3)
+                {
+                    <Step3_Address Model="formModel" />
+                }
+                else if (currentStep == 4)
+                {
+                    <Step4_ClassSlot Model="formModel" OnSlotSelected="SaveFormState" />
+                }
+                else if (currentStep == 5)
+                {
+                    <Step5_Review Model="formModel" />
+                }
+
+                <!-- Navigation Buttons -->
+                <div class="d-flex justify-content-between mt-4 gap-3">
+                    @if (currentStep > 1)
+                    {
+                        <button type="button" class="btn-kawaii btn-kawaii-outline flex-fill"
+                                @onclick="PreviousStep" disabled="@isSubmitting">
+                            ← Kembali
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="flex-fill"></div>
+                    }
+
+                    @if (currentStep < 5)
+                    {
+                        <button type="button" class="btn-kawaii flex-fill"
+                                @onclick="NextStep" disabled="@isSubmitting">
+                            Seterusnya →
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn-kawaii btn-kawaii-secondary flex-fill"
+                                disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Menghantar...</span>
+                            }
+                            else
+                            {
+                                <span>✓ Hantar Pendaftaran</span>
+                            }
+                        </button>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger mt-3" role="alert">
+                        @errorMessage
+                    </div>
+                }
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegistrationFormModel formModel = new();
+    private int currentStep = 1;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private bool isInitialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !isInitialized)
+        {
+            isInitialized = true;
+            await LoadFormState();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadFormState()
+    {
+        try
+        {
+            var savedModel = await FormStateService.LoadFormStateAsync();
+            if (savedModel != null)
+            {
+                formModel = savedModel;
+            }
+
+            currentStep = await FormStateService.LoadCurrentStepAsync();
+            if (currentStep < 1) currentStep = 1;
+            if (currentStep > 5) currentStep = 5;
+        }
+        catch
+        {
+            // Ignore errors loading state
+        }
+    }
+
+    private async Task SaveFormState()
+    {
+        try
+        {
+            await FormStateService.SaveFormStateAsync(formModel);
+            await FormStateService.SaveCurrentStepAsync(currentStep);
+        }
+        catch
+        {
+            // Ignore errors saving state
+        }
+    }
+
+    private async Task NextStep()
+    {
+        if (!ValidateCurrentStep())
+        {
+            return;
+        }
+
+        if (currentStep < 5)
+        {
+            currentStep++;
+            await SaveFormState();
+        }
+    }
+
+    private async Task PreviousStep()
+    {
+        if (currentStep > 1)
+        {
+            currentStep--;
+            await SaveFormState();
+        }
+    }
+
+    private bool ValidateCurrentStep()
+    {
+        errorMessage = null;
+
+        return currentStep switch
+        {
+            1 => ValidateStep1(),
+            2 => ValidateStep2(),
+            3 => ValidateStep3(),
+            4 => ValidateStep4(),
+            _ => true
+        };
+    }
+
+    private bool ValidateStep1()
+    {
+        if (string.IsNullOrWhiteSpace(formModel.StudentName))
+        {
+            errorMessage = "Sila masukkan nama pelajar.";
+            return false;
+        }
+        if (!formModel.DateOfBirth.HasValue)
+        {
+            errorMessage = "Sila masukkan tarikh lahir.";
+            return false;
+        }
+        if (!formModel.Gender.HasValue)
+        {
+            errorMessage = "Sila pilih jantina.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(formModel.SchoolYear))
+        {
+            errorMessage = "Sila pilih tahun persekolahan.";
+            return false;
+        }
+        if (!formModel.MusicExperience.HasValue)
+        {
+            errorMessage = "Sila pilih pengalaman muzik.";
+            return false;
+        }
+
+        // Validate age
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var age = today.Year - formModel.DateOfBirth.Value.Year;
+        if (formModel.DateOfBirth.Value > today.AddYears(-age)) age--;
+        if (age < 6 || age > 12)
+        {
+            errorMessage = "Umur pelajar mestilah antara 6-12 tahun.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ValidateStep2()
+    {
+        if (string.IsNullOrWhiteSpace(formModel.GuardianName))
+        {
+            errorMessage = "Sila masukkan nama penjaga.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(formModel.GuardianPhone))
+        {
+            errorMessage = "Sila masukkan nombor telefon.";
+            return false;
+        }
+        if (!System.Text.RegularExpressions.Regex.IsMatch(formModel.GuardianPhone, @"^01[0-9]-[0-9]{3,4} ?[0-9]{4}$"))
+        {
+            errorMessage = "Sila masukkan nombor telefon yang sah (contoh: 012-345 6789).";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(formModel.GuardianEmail))
+        {
+            errorMessage = "Sila masukkan alamat e-mel.";
+            return false;
+        }
+        if (!formModel.GuardianEmail.Contains('@'))
+        {
+            errorMessage = "Sila masukkan e-mel yang sah.";
+            return false;
+        }
+        return true;
+    }
+
+    private bool ValidateStep3()
+    {
+        if (string.IsNullOrWhiteSpace(formModel.Address))
+        {
+            errorMessage = "Sila masukkan alamat.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(formModel.Postcode) || formModel.Postcode.Length != 5)
+        {
+            errorMessage = "Sila masukkan poskod yang sah (5 digit).";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(formModel.City))
+        {
+            errorMessage = "Sila masukkan bandar.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(formModel.State))
+        {
+            errorMessage = "Sila pilih negeri.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(formModel.EmergencyName))
+        {
+            errorMessage = "Sila masukkan nama kenalan kecemasan.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(formModel.EmergencyPhone))
+        {
+            errorMessage = "Sila masukkan nombor telefon kenalan kecemasan.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(formModel.EmergencyRelationship))
+        {
+            errorMessage = "Sila masukkan hubungan dengan pelajar.";
+            return false;
+        }
+        return true;
+    }
+
+    private bool ValidateStep4()
+    {
+        if (string.IsNullOrWhiteSpace(formModel.ClassSlot))
+        {
+            errorMessage = "Sila pilih slot kelas.";
+            return false;
+        }
+        return true;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (isSubmitting) return;
+
+        // Final validation
+        if (!formModel.AgreeTerms || !formModel.AgreeParticipation || !formModel.AgreeMedia)
+        {
+            errorMessage = "Sila tandakan semua persetujuan.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(formModel.SignatoryName))
+        {
+            errorMessage = "Sila masukkan nama penandatangan.";
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var registration = await RegistrationService.CreateRegistrationAsync(formModel);
+            await FormStateService.ClearFormStateAsync();
+            NavigationManager.NavigateTo($"/berjaya/{registration.ReferenceNumber}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Ralat berlaku semasa menghantar pendaftaran. Sila cuba lagi.";
+            Console.WriteLine($"Registration error: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

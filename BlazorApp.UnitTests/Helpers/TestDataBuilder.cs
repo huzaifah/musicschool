@@ -1,85 +1,87 @@
 using BlazorApp.Data.Entities;
 using BlazorApp.Data.Enums;
-using BlazorApp.Models.DTOs;
+using BlazorApp.Models;
 
 namespace BlazorApp.UnitTests.Helpers;
 
 public static class TestDataBuilder
 {
-    public static Instructor CreateTestInstructor(
-        int id = 1,
-        string name = "Test Instructor",
-        bool isActive = true,
-        decimal hourlyRate = 50.00m)
+    public static Registration CreateTestRegistration(
+        Guid? id = null,
+        string referenceNumber = "NADIRITMA-KB-2026-001",
+        string studentName = "Ahmad bin Ali",
+        DateOnly? dateOfBirth = null,
+        Gender gender = Gender.Lelaki,
+        string schoolYear = "Tahun 3",
+        MusicExperience musicExperience = MusicExperience.TiadaPengalaman,
+        string guardianName = "Ali bin Abu",
+        string guardianPhone = "012-345 6789",
+        string guardianEmail = "ali@test.com",
+        string classSlot = "Sabtu, 11:30 pagi",
+        RegistrationStatus status = RegistrationStatus.Pending)
     {
-        return new Instructor
+        return new Registration
         {
-            Id = id,
-            Name = name,
-            Email = $"{name.Replace(" ", ".").ToLower()}@test.com",
-            Phone = "+1-555-0000",
-            Bio = "Test bio",
-            Specialization = "Piano",
-            HourlyRate = hourlyRate,
-            IsActive = isActive,
-            ImageUrl = null
-        };
-    }
-
-    public static MusicClass CreateTestMusicClass(
-        int id = 1,
-        int instructorId = 1,
-        ClassStatus status = ClassStatus.Available,
-        DateTime? scheduledDateTime = null,
-        string instrument = "Piano",
-        SkillLevel level = SkillLevel.Beginner)
-    {
-        return new MusicClass
-        {
-            Id = id,
-            InstructorId = instructorId,
-            Instrument = instrument,
-            Level = level,
-            ScheduledDateTime = scheduledDateTime ?? DateTime.Now.AddDays(7),
-            DurationMinutes = 60,
-            Price = 50.00m,
-            Description = "Test class description",
-            Status = status
-        };
-    }
-
-    public static Booking CreateTestBooking(
-        int id = 1,
-        int musicClassId = 1,
-        BookingStatus status = BookingStatus.Confirmed,
-        string studentName = "Test Student",
-        string studentEmail = "test@student.com")
-    {
-        return new Booking
-        {
-            Id = id,
-            MusicClassId = musicClassId,
+            Id = id ?? Guid.NewGuid(),
+            ReferenceNumber = referenceNumber,
             StudentName = studentName,
-            StudentEmail = studentEmail,
-            StudentPhone = "+1-555-1111",
-            Notes = "Test notes",
-            BookedAt = DateTime.UtcNow,
-            Status = status
+            DateOfBirth = dateOfBirth ?? DateOnly.FromDateTime(DateTime.Today.AddYears(-8)),
+            Gender = gender,
+            SchoolYear = schoolYear,
+            MusicExperience = musicExperience,
+            GuardianName = guardianName,
+            GuardianPhone = guardianPhone,
+            GuardianEmail = guardianEmail,
+            Address = "123 Jalan Test",
+            Postcode = "40000",
+            City = "Shah Alam",
+            State = "Selangor",
+            EmergencyName = "Fatimah binti Ahmad",
+            EmergencyPhone = "013-456 7890",
+            EmergencyRelationship = "Nenek",
+            ClassSlot = classSlot,
+            AgreeTerms = true,
+            AgreeParticipation = true,
+            AgreeMedia = true,
+            SignatoryName = guardianName,
+            Status = status,
+            CreatedAt = DateTime.UtcNow
         };
     }
 
-    public static BookingRequest CreateTestBookingRequest(
-        int musicClassId = 1,
-        string studentName = "Test Student",
-        string studentEmail = "test@student.com")
+    public static RegistrationFormModel CreateTestRegistrationFormModel(
+        string studentName = "Ahmad bin Ali",
+        DateOnly? dateOfBirth = null,
+        Gender gender = Gender.Lelaki,
+        string schoolYear = "Tahun 3",
+        MusicExperience musicExperience = MusicExperience.TiadaPengalaman,
+        string guardianName = "Ali bin Abu",
+        string guardianPhone = "012-345 6789",
+        string guardianEmail = "ali@test.com",
+        string classSlot = "Sabtu, 11:30 pagi")
     {
-        return new BookingRequest
+        return new RegistrationFormModel
         {
-            MusicClassId = musicClassId,
             StudentName = studentName,
-            StudentEmail = studentEmail,
-            StudentPhone = "+1-555-1111",
-            Notes = "Test notes"
+            DateOfBirth = dateOfBirth ?? DateOnly.FromDateTime(DateTime.Today.AddYears(-8)),
+            Gender = gender,
+            SchoolYear = schoolYear,
+            MusicExperience = musicExperience,
+            GuardianName = guardianName,
+            GuardianPhone = guardianPhone,
+            GuardianEmail = guardianEmail,
+            Address = "123 Jalan Test",
+            Postcode = "40000",
+            City = "Shah Alam",
+            State = "Selangor",
+            EmergencyName = "Fatimah binti Ahmad",
+            EmergencyPhone = "013-456 7890",
+            EmergencyRelationship = "Nenek",
+            ClassSlot = classSlot,
+            AgreeTerms = true,
+            AgreeParticipation = true,
+            AgreeMedia = true,
+            SignatoryName = guardianName
         };
     }
 }

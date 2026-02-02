@@ -1,0 +1,34 @@
+@using BlazorApp.Models
+
+<div class="card-kawaii">
+    <h3 class="mb-4" style="color: var(--kawaii-pink-dark); font-weight: 700;">
+        <span class="me-2">👨‍👩‍👧</span>Maklumat Ibu/Bapa/Penjaga
+    </h3>
+
+    <div class="form-kawaii">
+        <div class="mb-4">
+            <label class="form-label">Nama Penuh <span class="text-danger">*</span></label>
+            <InputText @bind-Value="Model.GuardianName" class="form-control" placeholder="Nama ibu/bapa/penjaga" />
+            <ValidationMessage For="@(() => Model.GuardianName)" class="validation-message" />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Nombor Telefon <span class="text-danger">*</span></label>
+            <InputText @bind-Value="Model.GuardianPhone" class="form-control" placeholder="012-345 6789" />
+            <ValidationMessage For="@(() => Model.GuardianPhone)" class="validation-message" />
+            <small class="text-muted">Format: 01X-XXX XXXX</small>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Alamat E-mel <span class="text-danger">*</span></label>
+            <InputText @bind-Value="Model.GuardianEmail" class="form-control" type="email" placeholder="contoh@email.com" />
+            <ValidationMessage For="@(() => Model.GuardianEmail)" class="validation-message" />
+            <small class="text-muted">Pengesahan pendaftaran akan dihantar ke e-mel ini</small>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RegistrationFormModel Model { get; set; } = null!;
+}

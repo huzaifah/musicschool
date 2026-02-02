@@ -1,0 +1,73 @@
+@using BlazorApp.Models
+
+<div class="card-kawaii">
+    <h3 class="mb-4" style="color: var(--kawaii-pink-dark); font-weight: 700;">
+        <span class="me-2">🏠</span>Alamat & Kenalan Kecemasan
+    </h3>
+
+    <div class="form-kawaii">
+        <h5 class="mb-3" style="color: var(--kawaii-text);">Alamat Kediaman</h5>
+
+        <div class="mb-4">
+            <label class="form-label">Alamat Penuh <span class="text-danger">*</span></label>
+            <InputTextArea @bind-Value="Model.Address" class="form-control" rows="3"
+                           placeholder="No. rumah, nama jalan, taman/kampung" />
+            <ValidationMessage For="@(() => Model.Address)" class="validation-message" />
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label class="form-label">Poskod <span class="text-danger">*</span></label>
+                <InputText @bind-Value="Model.Postcode" class="form-control" placeholder="40000" maxlength="5" />
+                <ValidationMessage For="@(() => Model.Postcode)" class="validation-message" />
+            </div>
+            <div class="col-md-8">
+                <label class="form-label">Bandar/Kawasan <span class="text-danger">*</span></label>
+                <InputText @bind-Value="Model.City" class="form-control" placeholder="Shah Alam" />
+                <ValidationMessage For="@(() => Model.City)" class="validation-message" />
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Negeri <span class="text-danger">*</span></label>
+            <InputSelect @bind-Value="Model.State" class="form-select">
+                <option value="">-- Pilih Negeri --</option>
+                @foreach (var state in RegistrationFormModel.MalaysianStates)
+                {
+                    <option value="@state">@state</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => Model.State)" class="validation-message" />
+        </div>
+
+        <hr class="my-4" />
+
+        <h5 class="mb-3" style="color: var(--kawaii-text);">
+            <span class="me-2">🆘</span>Kenalan Kecemasan
+        </h5>
+        <p class="text-muted small mb-3">Maklumat kenalan lain yang boleh dihubungi jika berlaku kecemasan</p>
+
+        <div class="mb-4">
+            <label class="form-label">Nama Kenalan <span class="text-danger">*</span></label>
+            <InputText @bind-Value="Model.EmergencyName" class="form-control" placeholder="Nama kenalan kecemasan" />
+            <ValidationMessage For="@(() => Model.EmergencyName)" class="validation-message" />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Nombor Telefon <span class="text-danger">*</span></label>
+            <InputText @bind-Value="Model.EmergencyPhone" class="form-control" placeholder="012-345 6789" />
+            <ValidationMessage For="@(() => Model.EmergencyPhone)" class="validation-message" />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Hubungan dengan Pelajar <span class="text-danger">*</span></label>
+            <InputText @bind-Value="Model.EmergencyRelationship" class="form-control" placeholder="Contoh: Nenek, Pak Cik, Jiran" />
+            <ValidationMessage For="@(() => Model.EmergencyRelationship)" class="validation-message" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RegistrationFormModel Model { get; set; } = null!;
+}

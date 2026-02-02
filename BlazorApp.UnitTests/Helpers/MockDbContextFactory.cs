@@ -16,25 +16,13 @@ public static class MockDbContextFactory
     }
 
     public static ApplicationDbContext CreateMockContextWithData(
-        List<Instructor>? instructors = null,
-        List<MusicClass>? classes = null,
-        List<Booking>? bookings = null)
+        List<Registration>? registrations = null)
     {
         var context = CreateMockContext();
 
-        if (instructors != null)
+        if (registrations != null)
         {
-            context.Instructors.AddRange(instructors);
-        }
-
-        if (classes != null)
-        {
-            context.MusicClasses.AddRange(classes);
-        }
-
-        if (bookings != null)
-        {
-            context.Bookings.AddRange(bookings);
+            context.Registrations.AddRange(registrations);
         }
 
         context.SaveChanges();

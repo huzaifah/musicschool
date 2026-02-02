@@ -10,33 +10,85 @@ public class ApplicationDbContext : DbContext
     {
     }
 
-    public DbSet<Instructor> Instructors { get; set; }
-    public DbSet<MusicClass> MusicClasses { get; set; }
-    public DbSet<Booking> Bookings { get; set; }
-    public DbSet<Instrument> Instruments { get; set; }
+    public DbSet<Registration> Registrations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<MusicClass>()
-            .HasOne(c => c.Instructor)
-            .WithMany(i => i.Classes)
-            .HasForeignKey(c => c.InstructorId)
-            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Registration>(entity =>
+        {
+            entity.HasKey(r => r.Id);
 
-        modelBuilder.Entity<Booking>()
-            .HasOne(b => b.MusicClass)
-            .WithOne(c => c.Booking)
-            .HasForeignKey<Booking>(b => b.MusicClassId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(r => r.ReferenceNumber)
+                .IsUnique();
 
-        modelBuilder.Entity<MusicClass>()
-            .Property(c => c.Price)
-            .HasPrecision(18, 2);
+            entity.Property(r => r.ReferenceNumber)
+                .HasMaxLength(30)
+                .IsRequired();
 
-        modelBuilder.Entity<Instructor>()
-            .Property(i => i.HourlyRate)
-            .HasPrecision(18, 2);
+            entity.Property(r => r.StudentName)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(r => r.Gender)
+                .HasConversion<string>()
+                .IsRequired();
+
+            entity.Property(r => r.SchoolYear)
+                .HasMaxLength(10)
+                .IsRequired();
+
+            entity.Property(r => r.MusicExperience)
+                .HasConversion<string>()
+                .IsRequired();
+
+            entity.Property(r => r.GuardianName)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(r => r.GuardianPhone)
+                .HasMaxLength(15)
+                .IsRequired();
+
+            entity.Property(r => r.GuardianEmail)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(r => r.Postcode)
+                .HasMaxLength(5)
+                .IsRequired();
+
+            entity.Property(r => r.City)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(r => r.State)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(r => r.EmergencyName)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(r => r.EmergencyPhone)
+                .HasMaxLength(15)
+                .IsRequired();
+
+            entity.Property(r => r.EmergencyRelationship)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(r => r.ClassSlot)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(r => r.SignatoryName)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(r => r.Status)
+                .HasConversion<string>();
+        });
     }
 }
