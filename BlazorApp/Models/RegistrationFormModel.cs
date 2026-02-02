@@ -152,7 +152,7 @@ public class RegistrationFormModel
     public string SignatoryName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Pengesahan umur pelajar (6-12 tahun)
+    /// Pengesahan umur pelajar (7-12 tahun)
     /// </summary>
     public static ValidationResult? ValidateAge(DateOnly? dateOfBirth, ValidationContext context)
     {
@@ -171,7 +171,7 @@ public class RegistrationFormModel
 
         if (age < 6 || age > 12)
         {
-            return new ValidationResult("Umur pelajar mestilah antara 6-12 tahun");
+            return new ValidationResult("Umur pelajar mestilah antara 7-12 tahun");
         }
 
         return ValidationResult.Success;
