@@ -218,9 +218,9 @@ public class RegistrationFormModel
     /// </summary>
     public static readonly ClassSlotOption[] AvailableClassSlots =
     [
-        new("Sabtu, 11:30 pagi", "Sabtu", "11:30 AM"),
-        new("Ahad, 11:30 pagi", "Ahad", "11:30 AM"),
-        new("Rabu, 5:00 petang", "Rabu", "5:00 PM")
+        new("Sabtu, 11:30 pagi - 12.30 tghari", "Sabtu", "11:30 AM - 12.30 PM"),
+        new("Rabu, 4:00 ptg - 5:00 ptg", "Rabu", "4:00 PM - 5:00 PM"),
+        new("Rabu, 5:00 ptg - 6:00 ptg", "Rabu", "5:00 PM - 6:00 PM")
     ];
 }
 
