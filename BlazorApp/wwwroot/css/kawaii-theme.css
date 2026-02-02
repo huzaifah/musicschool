@@ -39,9 +39,13 @@ body {
     font-weight: 600;
     font-size: 1.1rem;
     box-shadow: 0 4px 15px var(--kawaii-shadow);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     text-decoration: none;
     display: inline-block;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
 }
 
 .btn-kawaii:hover {
@@ -53,6 +57,21 @@ body {
 
 .btn-kawaii:active {
     transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .btn-kawaii:hover {
+        transform: none;
+        box-shadow: 0 4px 15px var(--kawaii-shadow);
+        background: linear-gradient(135deg, var(--kawaii-pink) 0%, var(--kawaii-pink-dark) 100%);
+    }
+
+    .btn-kawaii:active {
+        transform: scale(0.98);
+        opacity: 0.9;
+    }
 }
 
 .btn-kawaii-secondary {
@@ -445,9 +464,10 @@ body {
     }
 
     .btn-kawaii {
-        padding: 10px 25px;
+        padding: 14px 28px;
         font-size: 1rem;
-        width: 100%;
+        min-height: 48px;
+        min-width: 200px;
     }
 
     .card-kawaii {

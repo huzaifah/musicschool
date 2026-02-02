@@ -1,19 +1,17 @@
 @page "/"
 @layout BlazorApp.Components.Layout.RegistrationLayout
-@inject NavigationManager NavigationManager
-@rendermode InteractiveServer
 
 <PageTitle>NADIRITMA - Kelas Muzik Keyboard</PageTitle>
 
 <!-- Hero Section -->
 <section class="hero-kawaii">
     <div class="container">
-        <div class="hero-icon animate-bounce">🎹</div>
+        <div class="hero-icon animate-bounce" style="pointer-events: none;">🎹</div>
         <h1>Kelas Muzik (Keyboard)</h1>
         <p class="mb-4">Asah bakat muzik anak anda bersama kami!</p>
-        <button class="btn-kawaii" @onclick="NavigateToDaftar">
+        <a href="/daftar" class="btn-kawaii" data-enhance-nav="true">
             Daftar Sekarang
-        </button>
+        </a>
     </div>
 </section>
 
@@ -177,9 +175,9 @@
     <div class="card-kawaii" style="background: var(--kawaii-gradient); color: white;">
         <h3 class="mb-3" style="font-weight: 700;">Bersedia untuk Bermula?</h3>
         <p class="mb-4">Daftarkan anak anda sekarang dan mulakan perjalanan muzik mereka!</p>
-        <button class="btn-kawaii" style="background: white; color: var(--kawaii-pink-dark);" @onclick="NavigateToDaftar">
+        <a href="/daftar" class="btn-kawaii" style="background: white; color: var(--kawaii-pink-dark);" data-enhance-nav="true">
             Daftar Sekarang
-        </button>
+        </a>
     </div>
 </section>
 
@@ -208,9 +206,3 @@
     }
 </style>
 
-@code {
-    private void NavigateToDaftar()
-    {
-        NavigationManager.NavigateTo("/daftar");
-    }
-}
