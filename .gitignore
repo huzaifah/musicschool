@@ -94,3 +94,6 @@ ehthumbs.db
 # Claude AI
 .claude/
 azure-setup-commands.sh
+
+# Local secrets (do not commit)
+appsettings.Development.json

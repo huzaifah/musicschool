@@ -1,12 +1,32 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ms">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+
+    <!-- SEO & OG Tags -->
+    <meta name="description" content="Kelas Muzik Keyboard untuk kanak-kanak 8 - 12 tahun. Asah bakat muzik anak anda bersama pengajar berpengalaman 15+ tahun. RM150/bulan." />
+    <meta name="keywords" content="kelas muzik, keyboard, piano, kanak-kanak, Malaysia, Selangor" />
+
+    <!-- Open Graph / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="NADIRITMA - Kelas Muzik Keyboard" />
+    <meta property="og:description" content="Asah bakat muzik anak anda! Kelas keyboard untuk kanak-kanak 8 - 12 tahun. RM150/bulan sahaja." />
+    <meta property="og:image" content="/images/og-image.jpg" />
+    <meta property="og:url" content="https://nadiritma.com" />
+    <meta property="og:site_name" content="NADIRITMA" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="NADIRITMA - Kelas Muzik Keyboard" />
+    <meta name="twitter:description" content="Asah bakat muzik anak anda! Kelas keyboard untuk kanak-kanak 8 - 12 tahun." />
+    <meta name="twitter:image" content="/images/og-image.jpg" />
+
     <ResourcePreloader />
     <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
+    <link rel="stylesheet" href="@Assets["css/kawaii-theme.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["BlazorApp.styles.css"]" />
     <ImportMap />
@@ -16,7 +36,8 @@
 
 <body>
     <Routes />
-    <ReconnectModal />
+    <script src="@Assets["lib/bootstrap/dist/js/bootstrap.bundle.min.js"]"></script>
+    <script src="@Assets["js/formState.js"]"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 

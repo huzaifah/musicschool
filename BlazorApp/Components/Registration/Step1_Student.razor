@@ -1,0 +1,86 @@
+@using BlazorApp.Models
+@using BlazorApp.Data.Enums
+
+<div class="card-kawaii">
+    <h3 class="mb-4" style="color: var(--kawaii-pink-dark); font-weight: 700;">
+        <span class="me-2">👧</span>Maklumat Pelajar
+    </h3>
+
+    <div class="form-kawaii">
+        <div class="mb-4">
+            <label class="form-label">Nama Penuh Pelajar <span class="text-danger">*</span></label>
+            <InputText @bind-Value="Model.StudentName" class="form-control" placeholder="Nama seperti dalam kad pengenalan" />
+            <ValidationMessage For="@(() => Model.StudentName)" class="validation-message" />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Tarikh Lahir <span class="text-danger">*</span></label>
+            <InputDate @bind-Value="Model.DateOfBirth" class="form-control" />
+            <ValidationMessage For="@(() => Model.DateOfBirth)" class="validation-message" />
+            <small class="text-muted">Umur pelajar mestilah antara 8 - 12 tahun</small>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Jantina <span class="text-danger">*</span></label>
+            <div class="d-flex gap-3">
+                <label class="radio-card flex-fill text-center @(Model.Gender == Gender.Lelaki ? "selected" : "")">
+                    <input type="radio" name="gender" value="@Gender.Lelaki"
+                           checked="@(Model.Gender == Gender.Lelaki)"
+                           @onchange="@(() => Model.Gender = Gender.Lelaki)" />
+                    <span class="d-block fs-4 mb-1">👦</span>
+                    <span>Lelaki</span>
+                </label>
+                <label class="radio-card flex-fill text-center @(Model.Gender == Gender.Perempuan ? "selected" : "")">
+                    <input type="radio" name="gender" value="@Gender.Perempuan"
+                           checked="@(Model.Gender == Gender.Perempuan)"
+                           @onchange="@(() => Model.Gender = Gender.Perempuan)" />
+                    <span class="d-block fs-4 mb-1">👧</span>
+                    <span>Perempuan</span>
+                </label>
+            </div>
+            <ValidationMessage For="@(() => Model.Gender)" class="validation-message" />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Tahun Persekolahan <span class="text-danger">*</span></label>
+            <InputSelect @bind-Value="Model.SchoolYear" class="form-select">
+                <option value="">-- Pilih Tahun --</option>
+                @foreach (var year in RegistrationFormModel.SchoolYears)
+                {
+                    <option value="@year">@year</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => Model.SchoolYear)" class="validation-message" />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Pengalaman Muzik <span class="text-danger">*</span></label>
+            <div>
+                <label class="radio-card @(Model.MusicExperience == MusicExperience.TiadaPengalaman ? "selected" : "")">
+                    <input type="radio" name="experience" value="@MusicExperience.TiadaPengalaman"
+                           checked="@(Model.MusicExperience == MusicExperience.TiadaPengalaman)"
+                           @onchange="@(() => Model.MusicExperience = MusicExperience.TiadaPengalaman)" />
+                    <span>🌱 Tiada pengalaman - Baru bermula</span>
+                </label>
+                <label class="radio-card @(Model.MusicExperience == MusicExperience.BelajarSendiri ? "selected" : "")">
+                    <input type="radio" name="experience" value="@MusicExperience.BelajarSendiri"
+                           checked="@(Model.MusicExperience == MusicExperience.BelajarSendiri)"
+                           @onchange="@(() => Model.MusicExperience = MusicExperience.BelajarSendiri)" />
+                    <span>📱 Pernah belajar sendiri (YouTube, aplikasi, dll)</span>
+                </label>
+                <label class="radio-card @(Model.MusicExperience == MusicExperience.PernahMengikutiKelas ? "selected" : "")">
+                    <input type="radio" name="experience" value="@MusicExperience.PernahMengikutiKelas"
+                           checked="@(Model.MusicExperience == MusicExperience.PernahMengikutiKelas)"
+                           @onchange="@(() => Model.MusicExperience = MusicExperience.PernahMengikutiKelas)" />
+                    <span>🎓 Pernah mengikuti kelas muzik formal</span>
+                </label>
+            </div>
+            <ValidationMessage For="@(() => Model.MusicExperience)" class="validation-message" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RegistrationFormModel Model { get; set; } = null!;
+}

@@ -1,0 +1,69 @@
+@using BlazorApp.Models
+
+<div class="card-kawaii">
+    <h3 class="mb-4" style="color: var(--kawaii-pink-dark); font-weight: 700;">
+        <span class="me-2">📅</span>Pilih Slot Kelas
+    </h3>
+
+    <p class="text-muted mb-4">
+        Sila pilih slot kelas yang sesuai untuk anak anda. Setiap sesi berlangsung selama 1 jam.
+    </p>
+
+    <div class="form-kawaii">
+        <div class="row g-3">
+            @foreach (var slot in RegistrationFormModel.AvailableClassSlots)
+            {
+                var isSelected = Model.ClassSlot == slot.Display;
+                <div class="col-md-4">
+                    <div class="card-kawaii slot-card @(isSelected ? "selected" : "")"
+                         @onclick="@(() => SelectSlot(slot.Display))">
+                        <div class="text-center">
+                            <div class="slot-icon">
+                                @GetSlotIcon(slot.Day)
+                            </div>
+                            <div class="slot-day">@slot.Day</div>
+                            <div class="slot-time">@slot.Time</div>
+                            @if (isSelected)
+                            {
+                                <div class="mt-2">
+                                    <span class="badge" style="background: var(--kawaii-pink-dark);">✓ Dipilih</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <ValidationMessage For="@(() => Model.ClassSlot)" class="validation-message mt-3" />
+    </div>
+
+    <div class="mt-4 p-3" style="background: var(--kawaii-lavender); border-radius: 15px;">
+        <h6 style="color: var(--kawaii-pink-dark); font-weight: 700;">ℹ️ Maklumat Tambahan</h6>
+        <ul class="mb-0 ps-3">
+            <li>Kelas bermula pada awal setiap bulan</li>
+            <li>Yuran: RM150/bulan</li>
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RegistrationFormModel Model { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnSlotSelected { get; set; }
+
+    private async Task SelectSlot(string slot)
+    {
+        Model.ClassSlot = slot;
+        await OnSlotSelected.InvokeAsync();
+    }
+
+    private static string GetSlotIcon(string day) => day switch
+    {
+        "Sabtu" => "🌅",
+        "Ahad" => "☀️",
+        "Rabu" => "🌆",
+        _ => "📅"
+    };
+}

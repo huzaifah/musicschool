@@ -1,30 +1,36 @@
-﻿@page "/Error"
+@page "/Error"
+@layout BlazorApp.Components.Layout.RegistrationLayout
 @using System.Diagnostics
 
-<PageTitle>Error</PageTitle>
+<PageTitle>Ralat - NADIRITMA</PageTitle>
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card-kawaii text-center">
+                <div class="fs-1 mb-3">😔</div>
+                <h2 style="color: var(--kawaii-pink-dark); font-weight: 700;">
+                    Ralat Berlaku
+                </h2>
+                <p class="text-muted mb-4">
+                    Maaf, sesuatu yang tidak dijangka telah berlaku. Sila cuba lagi.
+                </p>
+                <a href="/" class="btn-kawaii">
+                    Kembali ke Laman Utama
+                </a>
 
-@if (ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@RequestId</code>
-    </p>
-}
+                @if (ShowRequestId)
+                {
+                    <p class="mt-4 small text-muted">
+                        <strong>Request ID:</strong> <code>@RequestId</code>
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
-
-@code{
+@code {
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 

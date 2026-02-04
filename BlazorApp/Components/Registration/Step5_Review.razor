@@ -1,0 +1,160 @@
+@using BlazorApp.Models
+@using BlazorApp.Data.Enums
+
+<div class="card-kawaii">
+    <h3 class="mb-4" style="color: var(--kawaii-pink-dark); font-weight: 700;">
+        <span class="me-2">📋</span>Semakan Maklumat
+    </h3>
+
+    <p class="text-muted mb-4">
+        Sila semak semua maklumat sebelum menghantar pendaftaran.
+    </p>
+
+    <!-- Student Info -->
+    <div class="review-section">
+        <h4>👧 Maklumat Pelajar</h4>
+        <div class="review-item">
+            <span class="review-label">Nama</span>
+            <span class="review-value">@Model.StudentName</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Tarikh Lahir</span>
+            <span class="review-value">@Model.DateOfBirth?.ToString("dd MMMM yyyy")</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Jantina</span>
+            <span class="review-value">@Model.Gender</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Tahun</span>
+            <span class="review-value">@Model.SchoolYear</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Pengalaman Muzik</span>
+            <span class="review-value">@GetExperienceLabel(Model.MusicExperience)</span>
+        </div>
+    </div>
+
+    <!-- Guardian Info -->
+    <div class="review-section">
+        <h4>👨‍👩‍👧 Maklumat Penjaga</h4>
+        <div class="review-item">
+            <span class="review-label">Nama</span>
+            <span class="review-value">@Model.GuardianName</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Telefon</span>
+            <span class="review-value">@Model.GuardianPhone</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">E-mel</span>
+            <span class="review-value">@Model.GuardianEmail</span>
+        </div>
+    </div>
+
+    <!-- Address Info -->
+    <div class="review-section">
+        <h4>🏠 Alamat</h4>
+        <div class="review-item">
+            <span class="review-label">Alamat</span>
+            <span class="review-value">@Model.Address</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Poskod</span>
+            <span class="review-value">@Model.Postcode</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Bandar</span>
+            <span class="review-value">@Model.City</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Negeri</span>
+            <span class="review-value">@Model.State</span>
+        </div>
+    </div>
+
+    <!-- Emergency Contact -->
+    <div class="review-section">
+        <h4>🆘 Kenalan Kecemasan</h4>
+        <div class="review-item">
+            <span class="review-label">Nama</span>
+            <span class="review-value">@Model.EmergencyName</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Telefon</span>
+            <span class="review-value">@Model.EmergencyPhone</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Hubungan</span>
+            <span class="review-value">@Model.EmergencyRelationship</span>
+        </div>
+    </div>
+
+    <!-- Class Slot -->
+    <div class="review-section">
+        <h4>📅 Slot Kelas</h4>
+        <div class="review-item">
+            <span class="review-label">Slot Dipilih</span>
+            <span class="review-value">@Model.ClassSlot</span>
+        </div>
+    </div>
+
+    <hr class="my-4" />
+
+    <!-- Consent Checkboxes -->
+    <div class="form-kawaii">
+        <h5 class="mb-3" style="color: var(--kawaii-pink-dark); font-weight: 700;">
+            ✅ Persetujuan
+        </h5>
+
+        <div class="mb-3">
+            <div class="form-check">
+                <InputCheckbox @bind-Value="Model.AgreeTerms" class="form-check-input" id="agreeTerms" />
+                <label class="form-check-label" for="agreeTerms">
+                    Saya bersetuju dengan <a href="#" style="color: var(--kawaii-pink-dark);">terma dan syarat</a> pendaftaran.
+                </label>
+            </div>
+            <ValidationMessage For="@(() => Model.AgreeTerms)" class="validation-message" />
+        </div>
+
+        <div class="mb-3">
+            <div class="form-check">
+                <InputCheckbox @bind-Value="Model.AgreeParticipation" class="form-check-input" id="agreeParticipation" />
+                <label class="form-check-label" for="agreeParticipation">
+                    Saya membenarkan anak saya menyertai semua aktiviti kelas termasuk persembahan.
+                </label>
+            </div>
+            <ValidationMessage For="@(() => Model.AgreeParticipation)" class="validation-message" />
+        </div>
+
+        <div class="mb-4">
+            <div class="form-check">
+                <InputCheckbox @bind-Value="Model.AgreeMedia" class="form-check-input" id="agreeMedia" />
+                <label class="form-check-label" for="agreeMedia">
+                    Saya membenarkan gambar/video anak saya digunakan untuk tujuan promosi kelas.
+                </label>
+            </div>
+            <ValidationMessage For="@(() => Model.AgreeMedia)" class="validation-message" />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Nama Penandatangan (Ibu/Bapa/Penjaga) <span class="text-danger">*</span></label>
+            <InputText @bind-Value="Model.SignatoryName" class="form-control"
+                       placeholder="Taipkan nama penuh anda sebagai tandatangan digital" />
+            <ValidationMessage For="@(() => Model.SignatoryName)" class="validation-message" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RegistrationFormModel Model { get; set; } = null!;
+
+    private static string GetExperienceLabel(MusicExperience? experience) => experience switch
+    {
+        MusicExperience.TiadaPengalaman => "Tiada pengalaman",
+        MusicExperience.BelajarSendiri => "Pernah belajar sendiri",
+        MusicExperience.PernahMengikutiKelas => "Pernah mengikuti kelas",
+        _ => "-"
+    };
+}

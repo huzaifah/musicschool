@@ -1,0 +1,361 @@
+@page "/admin"
+@layout BlazorApp.Components.Layout.RegistrationLayout
+@using BlazorApp.Data.Entities
+@using BlazorApp.Data.Enums
+@using BlazorApp.Services.Interfaces
+@inject IAdminService AdminService
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<PageTitle>Admin - NADIRITMA</PageTitle>
+
+<div class="container py-4">
+    @if (!isAuthenticated)
+    {
+        <!-- Login Form -->
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card-kawaii">
+                    <h3 class="text-center mb-4" style="color: var(--kawaii-pink-dark); font-weight: 700;">
+                        🔐 Log Masuk Admin
+                    </h3>
+                    <div class="form-kawaii">
+                        <div class="mb-3">
+                            <label class="form-label">Kata Laluan</label>
+                            <input type="password" class="form-control" @bind="password" @onkeypress="HandleKeyPress" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger py-2">@errorMessage</div>
+                        }
+                        <button type="button" class="btn-kawaii w-100" @onclick="Login">
+                            Log Masuk
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Admin Dashboard -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 style="color: var(--kawaii-pink-dark); font-weight: 700;">
+                📊 Panel Admin
+            </h2>
+            <button type="button" class="btn-kawaii-outline btn-kawaii" @onclick="Logout">
+                Log Keluar
+            </button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card-kawaii text-center">
+                    <h4 style="color: var(--kawaii-pink-dark);">@registrations.Count</h4>
+                    <small class="text-muted">Jumlah Pendaftaran</small>
+                </div>
+            </div>
+            @foreach (var slot in slotSummary)
+            {
+                <div class="col-md-3">
+                    <div class="card-kawaii text-center">
+                        <h4 style="color: var(--kawaii-pink-dark);">@slot.Value</h4>
+                        <small class="text-muted">@slot.Key</small>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="card-kawaii mb-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-kawaii">
+                        <input type="text" class="form-control" placeholder="🔍 Cari nama, telefon, e-mel..."
+                               @bind="searchTerm" @bind:event="oninput" @onkeyup="SearchDebounce" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-kawaii">
+                        <select class="form-select" @bind="selectedSlot" @bind:after="ApplyFilters">
+                            <option value="all">Semua Slot</option>
+                            @foreach (var slot in slotSummary.Keys)
+                            {
+                                <option value="@slot">@slot</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn-kawaii-secondary btn-kawaii w-100" @onclick="ExportCsv">
+                        📥 CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registrations Table -->
+        <div class="card-kawaii" style="overflow-x: auto;">
+            @if (isLoading)
+            {
+                <div class="text-center py-4">
+                    <div class="spinner-kawaii mx-auto"></div>
+                    <p class="mt-2 text-muted">Memuatkan...</p>
+                </div>
+            }
+            else if (!filteredRegistrations.Any())
+            {
+                <div class="text-center py-4">
+                    <p class="text-muted">Tiada pendaftaran dijumpai.</p>
+                </div>
+            }
+            else
+            {
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr style="background: var(--kawaii-lavender);">
+                            <th>No</th>
+                            <th>Rujukan</th>
+                            <th>Nama Pelajar</th>
+                            <th>Nama Ibu/Bapa</th>
+                            <th>No Telefon</th>
+                            <th>Slot Kelas</th>
+                            <th>Tarikh Daftar</th>
+                            <th>Status</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int no = 1; }
+                        @foreach (var reg in filteredRegistrations)
+                        {
+                            <tr>
+                                <td>@no</td>
+                                <td><code>@reg.ReferenceNumber</code></td>
+                                <td>@reg.StudentName</td>
+                                <td>@reg.GuardianName</td>
+                                <td><a href="tel:@reg.GuardianPhone.Replace(" ", "")">@reg.GuardianPhone</a></td>
+                                <td><span class="badge" style="background: var(--kawaii-lavender); color: var(--kawaii-text);">@GetShortSlot(reg.ClassSlot)</span></td>
+                                <td>@reg.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="badge @GetStatusBadgeClass(reg.Status)">
+                                        @GetStatusLabel(reg.Status)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            ⚙️
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><button class="dropdown-item" @onclick="() => ViewDetails(reg)">👁️ Lihat</button></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item" @onclick="() => UpdateStatus(reg.Id, RegistrationStatus.Confirmed)">✅ Sahkan</button></li>
+                                            <li><button class="dropdown-item" @onclick="() => UpdateStatus(reg.Id, RegistrationStatus.Cancelled)">❌ Batal</button></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            no++;
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <!-- Detail Modal -->
+        @if (selectedRegistration != null)
+        {
+            <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" @onclick="CloseModal">
+                <div class="modal-dialog modal-lg" @onclick:stopPropagation="true">
+                    <div class="modal-content" style="border-radius: 20px;">
+                        <div class="modal-header" style="background: var(--kawaii-gradient); color: white; border-radius: 20px 20px 0 0;">
+                            <h5 class="modal-title">📋 Butiran Pendaftaran</h5>
+                            <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 style="color: var(--kawaii-pink-dark);">Maklumat Pelajar</h6>
+                                    <p><strong>Nama:</strong> @selectedRegistration.StudentName</p>
+                                    <p><strong>Tarikh Lahir:</strong> @selectedRegistration.DateOfBirth.ToString("dd/MM/yyyy")</p>
+                                    <p><strong>Jantina:</strong> @selectedRegistration.Gender</p>
+                                    <p><strong>Tahun:</strong> @selectedRegistration.SchoolYear</p>
+                                    <p><strong>Pengalaman:</strong> @selectedRegistration.MusicExperience</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 style="color: var(--kawaii-pink-dark);">Maklumat Penjaga</h6>
+                                    <p><strong>Nama:</strong> @selectedRegistration.GuardianName</p>
+                                    <p><strong>Telefon:</strong> @selectedRegistration.GuardianPhone</p>
+                                    <p><strong>E-mel:</strong> @selectedRegistration.GuardianEmail</p>
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 style="color: var(--kawaii-pink-dark);">Alamat</h6>
+                                    <p>@selectedRegistration.Address<br/>
+                                    @selectedRegistration.Postcode @selectedRegistration.City<br/>
+                                    @selectedRegistration.State</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 style="color: var(--kawaii-pink-dark);">Kenalan Kecemasan</h6>
+                                    <p><strong>Nama:</strong> @selectedRegistration.EmergencyName</p>
+                                    <p><strong>Telefon:</strong> @selectedRegistration.EmergencyPhone</p>
+                                    <p><strong>Hubungan:</strong> @selectedRegistration.EmergencyRelationship</p>
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Slot Kelas:</strong> @selectedRegistration.ClassSlot</p>
+                                    <p><strong>Rujukan:</strong> <code>@selectedRegistration.ReferenceNumber</code></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Tarikh Daftar:</strong> @selectedRegistration.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                                    <p><strong>Status:</strong> <span class="badge @GetStatusBadgeClass(selectedRegistration.Status)">@GetStatusLabel(selectedRegistration.Status)</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="CloseModal">Tutup</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private bool isAuthenticated = false;
+    private bool isLoading = true;
+    private string password = "";
+    private string? errorMessage;
+    private string searchTerm = "";
+    private string selectedSlot = "all";
+
+    private List<Registration> registrations = new();
+    private List<Registration> filteredRegistrations = new();
+    private Dictionary<string, int> slotSummary = new();
+    private Registration? selectedRegistration;
+    private System.Timers.Timer? debounceTimer;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && isAuthenticated)
+        {
+            await LoadData();
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Login();
+        }
+    }
+
+    private async Task Login()
+    {
+        if (AdminService.ValidatePassword(password))
+        {
+            isAuthenticated = true;
+            errorMessage = null;
+            await LoadData();
+        }
+        else
+        {
+            errorMessage = "Kata laluan tidak sah.";
+        }
+    }
+
+    private void Logout()
+    {
+        isAuthenticated = false;
+        password = "";
+        registrations.Clear();
+        filteredRegistrations.Clear();
+        slotSummary.Clear();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        registrations = await AdminService.GetAllRegistrationsAsync();
+        filteredRegistrations = registrations;
+        slotSummary = await AdminService.GetSlotSummaryAsync();
+        isLoading = false;
+    }
+
+    private void SearchDebounce()
+    {
+        debounceTimer?.Stop();
+        debounceTimer?.Dispose();
+        debounceTimer = new System.Timers.Timer(300);
+        debounceTimer.Elapsed += async (s, e) =>
+        {
+            debounceTimer?.Stop();
+            await InvokeAsync(ApplyFilters);
+        };
+        debounceTimer.Start();
+    }
+
+    private async Task ApplyFilters()
+    {
+        filteredRegistrations = await AdminService.SearchRegistrationsAsync(searchTerm, selectedSlot);
+        StateHasChanged();
+    }
+
+    private void ViewDetails(Registration reg)
+    {
+        selectedRegistration = reg;
+    }
+
+    private void CloseModal()
+    {
+        selectedRegistration = null;
+    }
+
+    private async Task UpdateStatus(Guid id, RegistrationStatus status)
+    {
+        await AdminService.UpdateStatusAsync(id, status);
+        await LoadData();
+        await ApplyFilters();
+    }
+
+    private async Task ExportCsv()
+    {
+        var csv = await AdminService.ExportToCsvAsync();
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("downloadFile", $"pendaftaran_{DateTime.Now:yyyyMMdd}.csv", base64);
+    }
+
+    private static string GetShortSlot(string slot)
+    {
+        if (slot.Contains("Sabtu")) return "Sabtu";
+        if (slot.Contains("4:00")) return "Rabu 4PM";
+        if (slot.Contains("5:00")) return "Rabu 5PM";
+        return slot;
+    }
+
+    private static string GetStatusBadgeClass(RegistrationStatus status) => status switch
+    {
+        RegistrationStatus.Pending => "bg-warning text-dark",
+        RegistrationStatus.Confirmed => "bg-success",
+        RegistrationStatus.Cancelled => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private static string GetStatusLabel(RegistrationStatus status) => status switch
+    {
+        RegistrationStatus.Pending => "Menunggu",
+        RegistrationStatus.Confirmed => "Disahkan",
+        RegistrationStatus.Cancelled => "Dibatalkan",
+        _ => status.ToString()
+    };
+}

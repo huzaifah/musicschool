@@ -1,0 +1,40 @@
+@* Progress bar untuk borang pendaftaran 5 langkah *@
+
+<div class="progress-kawaii">
+    @for (int i = 1; i <= 5; i++)
+    {
+        var step = i;
+        var isActive = step == CurrentStep;
+        var isCompleted = step < CurrentStep;
+        var cssClass = isActive ? "active" : isCompleted ? "completed" : "";
+
+        <div class="progress-step @cssClass">
+            <div class="step-circle">
+                @if (isCompleted)
+                {
+                    <span>✓</span>
+                }
+                else
+                {
+                    @step
+                }
+            </div>
+            <span class="step-label">@GetStepLabel(step)</span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int CurrentStep { get; set; } = 1;
+
+    private static string GetStepLabel(int step) => step switch
+    {
+        1 => "Pelajar",
+        2 => "Penjaga",
+        3 => "Alamat",
+        4 => "Kelas",
+        5 => "Semakan",
+        _ => ""
+    };
+}
