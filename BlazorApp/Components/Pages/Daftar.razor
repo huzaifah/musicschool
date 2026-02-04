@@ -6,6 +6,7 @@
 @inject IFormStateService FormStateService
 @inject IRegistrationService RegistrationService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
 
 <PageTitle>Daftar - NADIRITMA</PageTitle>
@@ -21,6 +22,14 @@
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <ProgressBar CurrentStep="currentStep" />
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+                    <span class="me-2">⚠️</span>
+                    <span>@errorMessage</span>
+                </div>
+            }
 
             <EditForm Model="formModel" OnValidSubmit="HandleValidSubmit" FormName="registrationForm">
                 <DataAnnotationsValidator />
@@ -84,12 +93,6 @@
                     }
                 </div>
 
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <div class="alert alert-danger mt-3" role="alert">
-                        @errorMessage
-                    </div>
-                }
             </EditForm>
         </div>
     </div>
@@ -149,22 +152,27 @@
     {
         if (!ValidateCurrentStep())
         {
+            await JSRuntime.InvokeVoidAsync("window.scrollTo", 0, 0);
             return;
         }
 
+        errorMessage = null;
         if (currentStep < 5)
         {
             currentStep++;
             await SaveFormState();
+            await JSRuntime.InvokeVoidAsync("window.scrollTo", 0, 0);
         }
     }
 
     private async Task PreviousStep()
     {
+        errorMessage = null;
         if (currentStep > 1)
         {
             currentStep--;
             await SaveFormState();
+            await JSRuntime.InvokeVoidAsync("window.scrollTo", 0, 0);
         }
     }
 
@@ -311,12 +319,14 @@
         if (!formModel.AgreeTerms || !formModel.AgreeParticipation || !formModel.AgreeMedia)
         {
             errorMessage = "Sila tandakan semua persetujuan.";
+            await JSRuntime.InvokeVoidAsync("window.scrollTo", 0, 0);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(formModel.SignatoryName))
         {
             errorMessage = "Sila masukkan nama penandatangan.";
+            await JSRuntime.InvokeVoidAsync("window.scrollTo", 0, 0);
             return;
         }
 
@@ -333,6 +343,7 @@
         {
             errorMessage = "Ralat berlaku semasa menghantar pendaftaran. Sila cuba lagi.";
             Console.WriteLine($"Registration error: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("window.scrollTo", 0, 0);
         }
         finally
         {
