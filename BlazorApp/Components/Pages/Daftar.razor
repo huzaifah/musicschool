@@ -52,49 +52,33 @@
                 }
                 else if (currentStep == 5)
                 {
-                    <!-- Mobile-only Submit button at top -->
-                    <div class="d-md-none mb-3">
-                        <button type="submit" class="btn-kawaii btn-kawaii-secondary w-100"
-                                disabled="@isSubmitting">
-                            @if (isSubmitting)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                <span>Menghantar...</span>
-                            }
-                            else
-                            {
-                                <span>✓ Hantar Pendaftaran</span>
-                            }
-                        </button>
-                    </div>
-
                     <Step5_Review Model="formModel" />
                 }
 
                 <!-- Navigation Buttons -->
-                <div class="d-flex justify-content-between mt-4 gap-3">
+                <div class="d-flex flex-column-reverse flex-md-row justify-content-between mt-4 gap-3">
                     @if (currentStep > 1)
                     {
-                        <button type="button" class="btn-kawaii btn-kawaii-outline flex-fill"
+                        <button type="button" class="btn-kawaii btn-kawaii-outline w-100 w-md-auto flex-md-fill"
                                 @onclick="PreviousStep" disabled="@isSubmitting">
                             ← Kembali
                         </button>
                     }
                     else
                     {
-                        <div class="flex-fill"></div>
+                        <div class="d-none d-md-block flex-md-fill"></div>
                     }
 
                     @if (currentStep < 5)
                     {
-                        <button type="button" class="btn-kawaii flex-fill"
+                        <button type="button" class="btn-kawaii w-100 w-md-auto flex-md-fill"
                                 @onclick="NextStep" disabled="@isSubmitting">
                             Seterusnya →
                         </button>
                     }
                     else
                     {
-                        <button type="submit" class="btn-kawaii btn-kawaii-secondary flex-fill"
+                        <button type="submit" class="btn-kawaii btn-kawaii-secondary w-100 w-md-auto flex-md-fill"
                                 disabled="@isSubmitting">
                             @if (isSubmitting)
                             {

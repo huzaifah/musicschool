@@ -602,3 +602,14 @@ body {
         transform: rotate(360deg);
     }
 }
+
+/* Responsive Utilities for Navigation Buttons */
+@media (min-width: 768px) {
+    .w-md-auto {
+        width: auto !important;
+    }
+
+    .flex-md-fill {
+        flex: 1 1 auto !important;
+    }
+}
