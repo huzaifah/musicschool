@@ -6,6 +6,14 @@
 
 <PageTitle>NADIRITMA - Kelas Muzik Keyboard</PageTitle>
 
+<!-- Loading Overlay - Shows until SignalR connection is ready -->
+<div class="loading-overlay @(isInteractive ? "hidden" : "")">
+    <div class="loading-overlay-content">
+        <div class="spinner-kawaii"></div>
+        <p>Memuatkan...</p>
+    </div>
+</div>
+
 <!-- Hero Section -->
 <section class="hero-kawaii">
     <div class="container">
@@ -171,7 +179,7 @@
             </h2>
             <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                    Setiap sesi kelas berlangsung selama 30 minit. Ini termasuk teori asas, latihan praktikal, dan permainan lagu.
+                    Setiap sesi kelas berlangsung selama 30 minit hingga 1 jam bergantung kepada lokasi. Ini termasuk teori asas, latihan praktikal, dan permainan lagu.
                 </div>
             </div>
         </div>
@@ -311,6 +319,16 @@
 
 @code {
     private Venue selectedVenue = Venue.SriAlAminCherasSelatan;
+    private bool isInteractive = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isInteractive = true;
+            StateHasChanged();
+        }
+    }
 
     private VenueConfiguration? SelectedVenueConfig =>
         VenueConfiguration.GetVenue(selectedVenue);

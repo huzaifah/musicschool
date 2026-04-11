@@ -43,6 +43,11 @@ public class VenueConfiguration
     public ClassSlotOption[] AvailableSlots { get; init; } = [];
 
     /// <summary>
+    /// Tempoh setiap sesi kelas
+    /// </summary>
+    public string ClassDuration { get; init; } = string.Empty;
+
+    /// <summary>
     /// Senarai semua konfigurasi tempat
     /// </summary>
     public static readonly VenueConfiguration[] AllVenues =
@@ -59,7 +64,8 @@ public class VenueConfiguration
             [
                 new ClassSlotOption("Rabu, 3:00 ptg - 3:30 ptg", "Rabu", "3:00 PM - 3:30 PM"),
                 new ClassSlotOption("Sabtu, 12:00 tghari - 12:30 tghari", "Sabtu", "12:00 PM - 12:30 PM")
-            ]
+            ],
+            ClassDuration = "30 minit"
         },
         new VenueConfiguration
         {
@@ -69,7 +75,8 @@ public class VenueConfiguration
             Address = "43000 Kajang, Selangor",
             HasSlotSelection = false,
             ScheduleDisplay = "Jadual akan dimaklumkan",
-            AvailableSlots = []
+            AvailableSlots = [],
+            ClassDuration = "1 jam"
         }
     ];
 

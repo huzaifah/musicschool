@@ -12,6 +12,14 @@
 
 <PageTitle>Daftar - NADIRITMA</PageTitle>
 
+<!-- Loading Overlay - Shows until SignalR connection is ready -->
+<div class="loading-overlay @(isInteractive ? "hidden" : "")">
+    <div class="loading-overlay-content">
+        <div class="spinner-kawaii"></div>
+        <p>Memuatkan borang...</p>
+    </div>
+</div>
+
 <div class="container py-4">
     <div class="text-center mb-4">
         <h1 style="color: var(--kawaii-pink-dark); font-weight: 700;">
@@ -109,6 +117,7 @@
     private bool isSubmitting = false;
     private string? errorMessage;
     private bool isInitialized = false;
+    private bool isInteractive = false;
 
     private bool HasSlotSelection =>
         formModel.SelectedVenue.HasValue &&
@@ -118,11 +127,18 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !isInitialized)
+        if (firstRender)
         {
-            isInitialized = true;
-            await LoadFormState();
+            // Hide loading overlay as soon as SignalR connection is ready
+            isInteractive = true;
             StateHasChanged();
+
+            if (!isInitialized)
+            {
+                isInitialized = true;
+                await LoadFormState();
+                StateHasChanged();
+            }
         }
     }
 

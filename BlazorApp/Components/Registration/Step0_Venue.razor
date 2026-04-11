@@ -56,7 +56,7 @@
         <h6 style="color: var(--kawaii-pink-dark); font-weight: 700;">ℹ️ Maklumat Umum</h6>
         <ul class="mb-0 ps-3">
             <li>Yuran: RM150/bulan (sama untuk semua lokasi)</li>
-            <li>Sesi: 30 minit setiap kelas</li>
+            <li>Sesi: @GetSelectedDuration() setiap kelas</li>
         </ul>
     </div>
 </div>
@@ -130,4 +130,17 @@
         Venue.PrimaSaujanaKajang => "🏠",
         _ => "📍"
     };
+
+    private string GetSelectedDuration()
+    {
+        if (Model.SelectedVenue.HasValue)
+        {
+            var config = VenueConfiguration.GetVenue(Model.SelectedVenue.Value);
+            if (config != null && !string.IsNullOrEmpty(config.ClassDuration))
+            {
+                return config.ClassDuration;
+            }
+        }
+        return "30 minit - 1 jam";
+    }
 }
