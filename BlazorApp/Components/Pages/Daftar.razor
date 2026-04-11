@@ -1,6 +1,7 @@
 @page "/daftar"
 @layout BlazorApp.Components.Layout.RegistrationLayout
 @using BlazorApp.Models
+@using BlazorApp.Data.Enums
 @using BlazorApp.Services.Interfaces
 @using BlazorApp.Components.Registration
 @inject IFormStateService FormStateService
@@ -21,7 +22,7 @@
 
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <ProgressBar CurrentStep="currentStep" />
+            <ProgressBar CurrentStep="currentStep" TotalSteps="TotalSteps" SelectedVenue="formModel.SelectedVenue" />
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
@@ -36,21 +37,25 @@
 
                 @if (currentStep == 1)
                 {
-                    <Step1_Student Model="formModel" />
+                    <Step0_Venue Model="formModel" OnVenueSelected="SaveFormState" />
                 }
                 else if (currentStep == 2)
                 {
-                    <Step2_Guardian Model="formModel" />
+                    <Step1_Student Model="formModel" />
                 }
                 else if (currentStep == 3)
                 {
-                    <Step3_Address Model="formModel" />
+                    <Step2_Guardian Model="formModel" />
                 }
                 else if (currentStep == 4)
                 {
+                    <Step3_Address Model="formModel" />
+                }
+                else if (currentStep == 5 && HasSlotSelection)
+                {
                     <Step4_ClassSlot Model="formModel" OnSlotSelected="SaveFormState" />
                 }
-                else if (currentStep == 5)
+                else if ((currentStep == 5 && !HasSlotSelection) || currentStep == 6)
                 {
                     <Step5_Review Model="formModel" />
                 }
@@ -69,7 +74,7 @@
                         <div class="d-none d-md-block flex-md-fill"></div>
                     }
 
-                    @if (currentStep < 5)
+                    @if (currentStep < TotalSteps)
                     {
                         <button type="button" class="btn-kawaii w-100 w-md-auto flex-md-fill"
                                 @onclick="NextStep" disabled="@isSubmitting">
@@ -105,6 +110,12 @@
     private string? errorMessage;
     private bool isInitialized = false;
 
+    private bool HasSlotSelection =>
+        formModel.SelectedVenue.HasValue &&
+        VenueConfiguration.GetVenue(formModel.SelectedVenue.Value)?.HasSlotSelection == true;
+
+    private int TotalSteps => HasSlotSelection ? 6 : 5;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && !isInitialized)
@@ -127,7 +138,7 @@
 
             currentStep = await FormStateService.LoadCurrentStepAsync();
             if (currentStep < 1) currentStep = 1;
-            if (currentStep > 5) currentStep = 5;
+            if (currentStep > TotalSteps) currentStep = TotalSteps;
         }
         catch
         {
@@ -157,7 +168,7 @@
         }
 
         errorMessage = null;
-        if (currentStep < 5)
+        if (currentStep < TotalSteps)
         {
             currentStep++;
             await SaveFormState();
@@ -182,12 +193,23 @@
 
         return currentStep switch
         {
-            1 => ValidateStep1(),
-            2 => ValidateStep2(),
-            3 => ValidateStep3(),
-            4 => ValidateStep4(),
+            1 => ValidateStep0Venue(),
+            2 => ValidateStep1(),
+            3 => ValidateStep2(),
+            4 => ValidateStep3(),
+            5 when HasSlotSelection => ValidateStep4(),
             _ => true
         };
+    }
+
+    private bool ValidateStep0Venue()
+    {
+        if (!formModel.SelectedVenue.HasValue)
+        {
+            errorMessage = "Sila pilih lokasi kelas.";
+            return false;
+        }
+        return true;
     }
 
     private bool ValidateStep1()
@@ -303,7 +325,8 @@
 
     private bool ValidateStep4()
     {
-        if (string.IsNullOrWhiteSpace(formModel.ClassSlot))
+        // Only validate if venue has slot selection
+        if (HasSlotSelection && string.IsNullOrWhiteSpace(formModel.ClassSlot))
         {
             errorMessage = "Sila pilih slot kelas.";
             return false;

@@ -1,0 +1,133 @@
+@using BlazorApp.Models
+@using BlazorApp.Data.Enums
+
+<div class="card-kawaii">
+    <h3 class="mb-4" style="color: var(--kawaii-pink-dark); font-weight: 700;">
+        <span class="me-2">📍</span>Pilih Lokasi Kelas
+    </h3>
+
+    <p class="text-muted mb-4">
+        Sila pilih lokasi kelas yang berdekatan dengan anda.
+    </p>
+
+    <div class="form-kawaii">
+        <div class="row g-3">
+            @foreach (var venue in VenueConfiguration.AllVenues)
+            {
+                var isSelected = Model.SelectedVenue == venue.Venue;
+                <div class="col-md-6">
+                    <div class="card-kawaii venue-card @(isSelected ? "selected" : "")"
+                         @onclick="@(() => SelectVenue(venue.Venue))">
+                        <div class="text-center">
+                            <div class="venue-icon">
+                                @GetVenueIcon(venue.Venue)
+                            </div>
+                            <div class="venue-name">@venue.Name</div>
+                            <div class="venue-address text-muted small">@venue.Address</div>
+                            <div class="venue-schedule mt-2">
+                                @if (venue.HasSlotSelection)
+                                {
+                                    <small class="text-muted">
+                                        <span class="me-1">📅</span>@venue.ScheduleDisplay.Replace("\n", " / ")
+                                    </small>
+                                }
+                                else
+                                {
+                                    <small class="text-warning">
+                                        <span class="me-1">📅</span>@venue.ScheduleDisplay
+                                    </small>
+                                }
+                            </div>
+                            @if (isSelected)
+                            {
+                                <div class="mt-2">
+                                    <span class="badge" style="background: var(--kawaii-pink-dark);">✓ Dipilih</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <ValidationMessage For="@(() => Model.SelectedVenue)" class="validation-message mt-3" />
+    </div>
+
+    <div class="mt-4 p-3" style="background: var(--kawaii-lavender); border-radius: 15px;">
+        <h6 style="color: var(--kawaii-pink-dark); font-weight: 700;">ℹ️ Maklumat Umum</h6>
+        <ul class="mb-0 ps-3">
+            <li>Yuran: RM150/bulan (sama untuk semua lokasi)</li>
+            <li>Sesi: 30 minit setiap kelas</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .venue-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .venue-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .venue-card.selected {
+        border-color: var(--kawaii-pink-dark);
+        background: rgba(255, 107, 157, 0.05);
+    }
+
+    .venue-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .venue-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--kawaii-pink-dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .venue-address {
+        font-size: 0.9rem;
+    }
+
+    .venue-schedule {
+        line-height: 1.4;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public RegistrationFormModel Model { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnVenueSelected { get; set; }
+
+    private async Task SelectVenue(Venue venue)
+    {
+        Model.SelectedVenue = venue;
+
+        // Clear class slot when venue changes (in case switching from venue with slot to without)
+        var config = VenueConfiguration.GetVenue(venue);
+        if (config != null && !config.HasSlotSelection)
+        {
+            Model.ClassSlot = string.Empty;
+        }
+
+        await OnVenueSelected.InvokeAsync();
+    }
+
+    private static string GetVenueIcon(Venue venue) => venue switch
+    {
+        Venue.SriAlAminCherasSelatan => "🏫",
+        Venue.PrimaSaujanaKajang => "🏠",
+        _ => "📍"
+    };
+}

@@ -8,6 +8,14 @@ namespace BlazorApp.Models;
 /// </summary>
 public class RegistrationFormModel
 {
+    // ===== Langkah 0: Pilihan Tempat =====
+
+    /// <summary>
+    /// Tempat kelas yang dipilih
+    /// </summary>
+    [Required(ErrorMessage = "Sila pilih lokasi kelas")]
+    public Venue? SelectedVenue { get; set; }
+
     // ===== Langkah 1: Maklumat Pelajar =====
 
     /// <summary>
@@ -116,12 +124,11 @@ public class RegistrationFormModel
     [StringLength(100, ErrorMessage = "Hubungan tidak boleh melebihi 100 aksara")]
     public string EmergencyRelationship { get; set; } = string.Empty;
 
-    // ===== Langkah 4: Slot Kelas =====
+    // ===== Langkah 4: Slot Kelas (hanya untuk tempat yang mempunyai pilihan slot) =====
 
     /// <summary>
-    /// Slot kelas yang dipilih
+    /// Slot kelas yang dipilih (tidak wajib jika tempat tiada pilihan slot)
     /// </summary>
-    [Required(ErrorMessage = "Sila pilih slot kelas")]
     public string ClassSlot { get; set; } = string.Empty;
 
     // ===== Langkah 5: Persetujuan =====
@@ -213,15 +220,6 @@ public class RegistrationFormModel
         "Tahun 6"
     ];
 
-    /// <summary>
-    /// Slot kelas yang tersedia
-    /// </summary>
-    public static readonly ClassSlotOption[] AvailableClassSlots =
-    [
-        new("Rabu, 4:00 ptg - 5:00 ptg", "Rabu", "4:00 PM - 5:00 PM"),
-        new("Sabtu, 11:30 pagi - 12:30 tghari", "Sabtu", "11:30 AM - 12:30 PM"),
-        new("Ahad, 10:00 pagi - 11:00 pagi", "Ahad", "10:00 AM - 11:00 AM")
-    ];
 }
 
 /// <summary>

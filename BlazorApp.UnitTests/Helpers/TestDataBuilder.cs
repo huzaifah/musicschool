@@ -9,6 +9,7 @@ public static class TestDataBuilder
     public static Registration CreateTestRegistration(
         Guid? id = null,
         string referenceNumber = "NR-TEST1234",
+        Venue venue = Venue.SriAlAminCherasSelatan,
         string studentName = "Ahmad bin Ali",
         DateOnly? dateOfBirth = null,
         Gender gender = Gender.Lelaki,
@@ -17,13 +18,14 @@ public static class TestDataBuilder
         string guardianName = "Ali bin Abu",
         string guardianPhone = "012-345 6789",
         string guardianEmail = "ali@test.com",
-        string classSlot = "Sabtu, 11:30 pagi",
+        string? classSlot = "Sabtu, 11:30 pagi",
         RegistrationStatus status = RegistrationStatus.Pending)
     {
         return new Registration
         {
             Id = id ?? Guid.NewGuid(),
             ReferenceNumber = referenceNumber,
+            Venue = venue,
             StudentName = studentName,
             DateOfBirth = dateOfBirth ?? DateOnly.FromDateTime(DateTime.Today.AddYears(-8)),
             Gender = gender,
@@ -50,6 +52,7 @@ public static class TestDataBuilder
     }
 
     public static RegistrationFormModel CreateTestRegistrationFormModel(
+        Venue selectedVenue = Venue.SriAlAminCherasSelatan,
         string studentName = "Ahmad bin Ali",
         DateOnly? dateOfBirth = null,
         Gender gender = Gender.Lelaki,
@@ -62,6 +65,7 @@ public static class TestDataBuilder
     {
         return new RegistrationFormModel
         {
+            SelectedVenue = selectedVenue,
             StudentName = studentName,
             DateOfBirth = dateOfBirth ?? DateOnly.FromDateTime(DateTime.Today.AddYears(-8)),
             Gender = gender,

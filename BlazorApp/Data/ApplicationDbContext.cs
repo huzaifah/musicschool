@@ -79,9 +79,13 @@ public class ApplicationDbContext : DbContext
                 .HasMaxLength(100)
                 .IsRequired();
 
+            entity.Property(r => r.Venue)
+                .HasConversion<string>()
+                .IsRequired();
+
             entity.Property(r => r.ClassSlot)
                 .HasMaxLength(100)
-                .IsRequired();
+                .IsRequired(false);
 
             entity.Property(r => r.SignatoryName)
                 .HasMaxLength(255)

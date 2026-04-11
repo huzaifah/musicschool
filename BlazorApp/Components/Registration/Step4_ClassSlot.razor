@@ -6,12 +6,21 @@
     </h3>
 
     <p class="text-muted mb-4">
-        Sila pilih slot kelas yang sesuai untuk anak anda. Setiap sesi berlangsung selama 1 jam.
+        Sila pilih slot kelas yang sesuai untuk anak anda. Setiap sesi berlangsung selama 30 minit.
     </p>
+
+    @if (VenueConfig != null)
+    {
+        <div class="mb-3 p-2" style="background: var(--kawaii-lavender); border-radius: 10px;">
+            <small class="text-muted">
+                <span class="me-1">📍</span>Lokasi: <strong>@VenueConfig.Name</strong>
+            </small>
+        </div>
+    }
 
     <div class="form-kawaii">
         <div class="row g-3">
-            @foreach (var slot in RegistrationFormModel.AvailableClassSlots)
+            @foreach (var slot in AvailableSlots)
             {
                 var isSelected = Model.ClassSlot == slot.Display;
                 <div class="col-md-4">
@@ -53,6 +62,14 @@
     [Parameter]
     public EventCallback OnSlotSelected { get; set; }
 
+    private VenueConfiguration? VenueConfig =>
+        Model.SelectedVenue.HasValue
+            ? VenueConfiguration.GetVenue(Model.SelectedVenue.Value)
+            : null;
+
+    private ClassSlotOption[] AvailableSlots =>
+        VenueConfig?.AvailableSlots ?? [];
+
     private async Task SelectSlot(string slot)
     {
         Model.ClassSlot = slot;
@@ -62,7 +79,6 @@
     private static string GetSlotIcon(string day) => day switch
     {
         "Sabtu" => "🌅",
-        "Ahad" => "☀️",
         "Rabu" => "🌆",
         _ => "📅"
     };

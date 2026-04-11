@@ -10,6 +10,19 @@
         Sila semak semua maklumat sebelum menghantar pendaftaran.
     </p>
 
+    <!-- Venue Info -->
+    <div class="review-section">
+        <h4>📍 Lokasi Kelas</h4>
+        <div class="review-item">
+            <span class="review-label">Tempat</span>
+            <span class="review-value">@GetVenueName()</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">Alamat</span>
+            <span class="review-value">@GetVenueAddress()</span>
+        </div>
+    </div>
+
     <!-- Student Info -->
     <div class="review-section">
         <h4>👧 Maklumat Pelajar</h4>
@@ -95,7 +108,7 @@
         <h4>📅 Slot Kelas</h4>
         <div class="review-item">
             <span class="review-label">Slot Dipilih</span>
-            <span class="review-value">@Model.ClassSlot</span>
+            <span class="review-value">@GetClassSlotDisplay()</span>
         </div>
     </div>
 
@@ -149,6 +162,28 @@
 @code {
     [Parameter]
     public RegistrationFormModel Model { get; set; } = null!;
+
+    private VenueConfiguration? VenueConfig =>
+        Model.SelectedVenue.HasValue
+            ? VenueConfiguration.GetVenue(Model.SelectedVenue.Value)
+            : null;
+
+    private string GetVenueName() =>
+        VenueConfig?.Name ?? "-";
+
+    private string GetVenueAddress() =>
+        VenueConfig?.Address ?? "-";
+
+    private string GetClassSlotDisplay()
+    {
+        if (VenueConfig == null)
+            return "-";
+
+        if (!VenueConfig.HasSlotSelection)
+            return "Akan dimaklumkan";
+
+        return string.IsNullOrEmpty(Model.ClassSlot) ? "-" : Model.ClassSlot;
+    }
 
     private static string GetExperienceLabel(MusicExperience? experience) => experience switch
     {

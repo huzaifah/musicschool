@@ -35,7 +35,7 @@ public class AdminService : IAdminService
             .ToListAsync();
     }
 
-    public async Task<List<Registration>> SearchRegistrationsAsync(string? searchTerm, string? slotFilter)
+    public async Task<List<Registration>> SearchRegistrationsAsync(string? searchTerm, string? slotFilter, string? venueFilter = null)
     {
         var query = _context.Registrations.AsNoTracking();
 
@@ -52,7 +52,22 @@ public class AdminService : IAdminService
 
         if (!string.IsNullOrWhiteSpace(slotFilter) && slotFilter != "all")
         {
-            query = query.Where(r => r.ClassSlot == slotFilter);
+            if (slotFilter == "Tidak ditetapkan")
+            {
+                query = query.Where(r => r.ClassSlot == null || r.ClassSlot == "");
+            }
+            else
+            {
+                query = query.Where(r => r.ClassSlot == slotFilter);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(venueFilter) && venueFilter != "all")
+        {
+            if (Enum.TryParse<Venue>(venueFilter, out var venue))
+            {
+                query = query.Where(r => r.Venue == venue);
+            }
         }
 
         return await query
@@ -64,7 +79,7 @@ public class AdminService : IAdminService
     {
         return await _context.Registrations
             .AsNoTracking()
-            .GroupBy(r => r.ClassSlot)
+            .GroupBy(r => r.ClassSlot ?? "Tidak ditetapkan")
             .Select(g => new { Slot = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Slot, x => x.Count);
     }
@@ -88,13 +103,14 @@ public class AdminService : IAdminService
         var sb = new StringBuilder();
 
         // Header
-        sb.AppendLine("No,Rujukan,Nama Pelajar,Tarikh Lahir,Jantina,Tahun,Pengalaman Muzik,Nama Penjaga,Telefon,E-mel,Alamat,Poskod,Bandar,Negeri,Kenalan Kecemasan,Telefon Kecemasan,Hubungan,Slot Kelas,Status,Tarikh Daftar");
+        sb.AppendLine("No,Rujukan,Lokasi,Nama Pelajar,Tarikh Lahir,Jantina,Tahun,Pengalaman Muzik,Nama Penjaga,Telefon,E-mel,Alamat,Poskod,Bandar,Negeri,Kenalan Kecemasan,Telefon Kecemasan,Hubungan,Slot Kelas,Status,Tarikh Daftar");
 
         int no = 1;
         foreach (var r in registrations)
         {
             sb.AppendLine($"{no}," +
                 $"\"{r.ReferenceNumber}\"," +
+                $"\"{r.Venue}\"," +
                 $"\"{EscapeCsv(r.StudentName)}\"," +
                 $"{r.DateOfBirth:yyyy-MM-dd}," +
                 $"{r.Gender}," +
@@ -110,7 +126,7 @@ public class AdminService : IAdminService
                 $"\"{EscapeCsv(r.EmergencyName)}\"," +
                 $"\"{r.EmergencyPhone}\"," +
                 $"\"{EscapeCsv(r.EmergencyRelationship)}\"," +
-                $"\"{EscapeCsv(r.ClassSlot)}\"," +
+                $"\"{EscapeCsv(r.ClassSlot ?? "")}\"," +
                 $"{r.Status}," +
                 $"{r.CreatedAt:yyyy-MM-dd HH:mm:ss}");
             no++;

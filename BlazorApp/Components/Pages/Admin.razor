@@ -2,6 +2,7 @@
 @layout BlazorApp.Components.Layout.RegistrationLayout
 @using BlazorApp.Data.Entities
 @using BlazorApp.Data.Enums
+@using BlazorApp.Models
 @using BlazorApp.Services.Interfaces
 @inject IAdminService AdminService
 @inject IJSRuntime JSRuntime
@@ -70,13 +71,24 @@
         <!-- Search and Filter -->
         <div class="card-kawaii mb-4">
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-kawaii">
                         <input type="text" class="form-control" placeholder="🔍 Cari nama, telefon, e-mel..."
                                @bind="searchTerm" @bind:event="oninput" @onkeyup="SearchDebounce" />
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <div class="form-kawaii">
+                        <select class="form-select" @bind="selectedVenue" @bind:after="ApplyFilters">
+                            <option value="all">Semua Lokasi</option>
+                            @foreach (var venue in VenueConfiguration.AllVenues)
+                            {
+                                <option value="@venue.Venue.ToString()">@venue.ShortName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <div class="form-kawaii">
                         <select class="form-select" @bind="selectedSlot" @bind:after="ApplyFilters">
                             <option value="all">Semua Slot</option>
@@ -120,6 +132,7 @@
                             <th>Nama Pelajar</th>
                             <th>Nama Ibu/Bapa</th>
                             <th>No Telefon</th>
+                            <th>Lokasi</th>
                             <th>Slot Kelas</th>
                             <th>Tarikh Daftar</th>
                             <th>Status</th>
@@ -136,7 +149,8 @@
                                 <td>@reg.StudentName</td>
                                 <td>@reg.GuardianName</td>
                                 <td><a href="tel:@reg.GuardianPhone.Replace(" ", "")">@reg.GuardianPhone</a></td>
-                                <td><span class="badge" style="background: var(--kawaii-lavender); color: var(--kawaii-text);">@GetShortSlot(reg.ClassSlot)</span></td>
+                                <td><span class="badge @GetVenueBadgeClass(reg.Venue)">@GetVenueShortName(reg.Venue)</span></td>
+                                <td><span class="badge" style="background: var(--kawaii-lavender); color: var(--kawaii-text);">@GetShortSlot(reg.ClassSlot ?? "")</span></td>
                                 <td>@reg.CreatedAt.ToString("dd/MM/yyyy")</td>
                                 <td>
                                     <span class="badge @GetStatusBadgeClass(reg.Status)">
@@ -209,10 +223,13 @@
                             <hr />
                             <div class="row">
                                 <div class="col-md-6">
-                                    <p><strong>Slot Kelas:</strong> @selectedRegistration.ClassSlot</p>
+                                    <h6 style="color: var(--kawaii-pink-dark);">Maklumat Kelas</h6>
+                                    <p><strong>Lokasi:</strong> @GetVenueName(selectedRegistration.Venue)</p>
+                                    <p><strong>Slot Kelas:</strong> @(string.IsNullOrEmpty(selectedRegistration.ClassSlot) ? "Akan dimaklumkan" : selectedRegistration.ClassSlot)</p>
                                     <p><strong>Rujukan:</strong> <code>@selectedRegistration.ReferenceNumber</code></p>
                                 </div>
                                 <div class="col-md-6">
+                                    <h6 style="color: var(--kawaii-pink-dark);">Status Pendaftaran</h6>
                                     <p><strong>Tarikh Daftar:</strong> @selectedRegistration.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
                                     <p><strong>Status:</strong> <span class="badge @GetStatusBadgeClass(selectedRegistration.Status)">@GetStatusLabel(selectedRegistration.Status)</span></p>
                                 </div>
@@ -235,6 +252,7 @@
     private string? errorMessage;
     private string searchTerm = "";
     private string selectedSlot = "all";
+    private string selectedVenue = "all";
 
     private List<Registration> registrations = new();
     private List<Registration> filteredRegistrations = new();
@@ -306,7 +324,7 @@
 
     private async Task ApplyFilters()
     {
-        filteredRegistrations = await AdminService.SearchRegistrationsAsync(searchTerm, selectedSlot);
+        filteredRegistrations = await AdminService.SearchRegistrationsAsync(searchTerm, selectedSlot, selectedVenue);
         StateHasChanged();
     }
 
@@ -337,9 +355,11 @@
 
     private static string GetShortSlot(string slot)
     {
+        if (string.IsNullOrEmpty(slot)) return "Tidak ditetapkan";
         if (slot.Contains("Sabtu")) return "Sabtu";
         if (slot.Contains("4:00")) return "Rabu 4PM";
         if (slot.Contains("5:00")) return "Rabu 5PM";
+        if (slot.Contains("3:00")) return "Rabu 3PM";
         return slot;
     }
 
@@ -357,5 +377,24 @@
         RegistrationStatus.Confirmed => "Disahkan",
         RegistrationStatus.Cancelled => "Dibatalkan",
         _ => status.ToString()
+    };
+
+    private static string GetVenueShortName(Venue venue)
+    {
+        var config = VenueConfiguration.GetVenue(venue);
+        return config?.ShortName ?? venue.ToString();
+    }
+
+    private static string GetVenueName(Venue venue)
+    {
+        var config = VenueConfiguration.GetVenue(venue);
+        return config?.Name ?? venue.ToString();
+    }
+
+    private static string GetVenueBadgeClass(Venue venue) => venue switch
+    {
+        Venue.SriAlAminCherasSelatan => "bg-primary",
+        Venue.PrimaSaujanaKajang => "bg-info text-dark",
+        _ => "bg-secondary"
     };
 }

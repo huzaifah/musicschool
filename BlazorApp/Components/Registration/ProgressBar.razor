@@ -1,7 +1,9 @@
-@* Progress bar untuk borang pendaftaran 5 langkah *@
+@* Progress bar untuk borang pendaftaran 5 atau 6 langkah *@
+@using BlazorApp.Data.Enums
+@using BlazorApp.Models
 
 <div class="progress-kawaii">
-    @for (int i = 1; i <= 5; i++)
+    @for (int i = 1; i <= TotalSteps; i++)
     {
         var step = i;
         var isActive = step == CurrentStep;
@@ -28,13 +30,44 @@
     [Parameter]
     public int CurrentStep { get; set; } = 1;
 
-    private static string GetStepLabel(int step) => step switch
+    [Parameter]
+    public int TotalSteps { get; set; } = 5;
+
+    [Parameter]
+    public Venue? SelectedVenue { get; set; }
+
+    private bool HasSlotSelection =>
+        SelectedVenue.HasValue &&
+        VenueConfiguration.GetVenue(SelectedVenue.Value)?.HasSlotSelection == true;
+
+    private string GetStepLabel(int step)
     {
-        1 => "Pelajar",
-        2 => "Penjaga",
-        3 => "Alamat",
-        4 => "Kelas",
-        5 => "Semakan",
-        _ => ""
-    };
+        if (TotalSteps == 6)
+        {
+            // 6 steps: Tempat → Pelajar → Penjaga → Alamat → Kelas → Semakan
+            return step switch
+            {
+                1 => "Tempat",
+                2 => "Pelajar",
+                3 => "Penjaga",
+                4 => "Alamat",
+                5 => "Kelas",
+                6 => "Semakan",
+                _ => ""
+            };
+        }
+        else
+        {
+            // 5 steps: Tempat → Pelajar → Penjaga → Alamat → Semakan (no Kelas)
+            return step switch
+            {
+                1 => "Tempat",
+                2 => "Pelajar",
+                3 => "Penjaga",
+                4 => "Alamat",
+                5 => "Semakan",
+                _ => ""
+            };
+        }
+    }
 }

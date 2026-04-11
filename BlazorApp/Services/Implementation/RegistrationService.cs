@@ -25,10 +25,22 @@ public class RegistrationService : IRegistrationService
     {
         var referenceNumber = await GenerateReferenceNumberAsync();
 
+        // Determine class slot based on venue configuration
+        string? classSlot = null;
+        if (model.SelectedVenue.HasValue)
+        {
+            var venueConfig = VenueConfiguration.GetVenue(model.SelectedVenue.Value);
+            if (venueConfig?.HasSlotSelection == true)
+            {
+                classSlot = model.ClassSlot;
+            }
+        }
+
         var registration = new Registration
         {
             Id = Guid.NewGuid(),
             ReferenceNumber = referenceNumber,
+            Venue = model.SelectedVenue!.Value,
             StudentName = model.StudentName,
             DateOfBirth = model.DateOfBirth!.Value,
             Gender = model.Gender!.Value,
@@ -44,7 +56,7 @@ public class RegistrationService : IRegistrationService
             EmergencyName = model.EmergencyName,
             EmergencyPhone = model.EmergencyPhone,
             EmergencyRelationship = model.EmergencyRelationship,
-            ClassSlot = model.ClassSlot,
+            ClassSlot = classSlot,
             AgreeTerms = model.AgreeTerms,
             AgreeParticipation = model.AgreeParticipation,
             AgreeMedia = model.AgreeMedia,

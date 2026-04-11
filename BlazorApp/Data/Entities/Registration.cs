@@ -17,6 +17,11 @@ public class Registration
     /// </summary>
     public string ReferenceNumber { get; set; } = null!;
 
+    /// <summary>
+    /// Lokasi tempat kelas
+    /// </summary>
+    public Venue Venue { get; set; }
+
     // ===== Maklumat Pelajar =====
 
     /// <summary>
@@ -103,9 +108,9 @@ public class Registration
     // ===== Slot Kelas =====
 
     /// <summary>
-    /// Slot kelas yang dipilih
+    /// Slot kelas yang dipilih (boleh null jika tempat tiada pilihan slot)
     /// </summary>
-    public string ClassSlot { get; set; } = null!;
+    public string? ClassSlot { get; set; }
 
     // ===== Persetujuan =====
 

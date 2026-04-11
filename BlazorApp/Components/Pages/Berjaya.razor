@@ -1,6 +1,8 @@
 @page "/berjaya/{ReferenceNumber}"
 @layout BlazorApp.Components.Layout.RegistrationLayout
 @using BlazorApp.Data.Entities
+@using BlazorApp.Data.Enums
+@using BlazorApp.Models
 @using BlazorApp.Services.Interfaces
 @inject IRegistrationService RegistrationService
 @rendermode InteractiveServer
@@ -55,8 +57,12 @@
                             <span class="review-value">@registration.StudentName</span>
                         </div>
                         <div class="review-item">
+                            <span class="review-label">Lokasi</span>
+                            <span class="review-value">@GetVenueName()</span>
+                        </div>
+                        <div class="review-item">
                             <span class="review-label">Slot Kelas</span>
-                            <span class="review-value">@registration.ClassSlot</span>
+                            <span class="review-value">@GetClassSlotDisplay()</span>
                         </div>
                         <div class="review-item">
                             <span class="review-label">E-mel Penjaga</span>
@@ -168,5 +174,26 @@
         {
             isLoading = false;
         }
+    }
+
+    private string GetVenueName()
+    {
+        if (registration == null) return "-";
+
+        var config = VenueConfiguration.GetVenue(registration.Venue);
+        return config?.Name ?? "-";
+    }
+
+    private string GetClassSlotDisplay()
+    {
+        if (registration == null) return "-";
+
+        var config = VenueConfiguration.GetVenue(registration.Venue);
+        if (config == null) return "-";
+
+        if (!config.HasSlotSelection)
+            return "Akan dimaklumkan";
+
+        return string.IsNullOrEmpty(registration.ClassSlot) ? "-" : registration.ClassSlot;
     }
 }

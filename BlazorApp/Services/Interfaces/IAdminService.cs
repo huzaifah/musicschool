@@ -20,7 +20,7 @@ public interface IAdminService
     /// <summary>
     /// Dapatkan pendaftaran dengan carian dan penapis
     /// </summary>
-    Task<List<Registration>> SearchRegistrationsAsync(string? searchTerm, string? slotFilter);
+    Task<List<Registration>> SearchRegistrationsAsync(string? searchTerm, string? slotFilter, string? venueFilter = null);
 
     /// <summary>
     /// Dapatkan ringkasan bilangan pendaftaran mengikut slot

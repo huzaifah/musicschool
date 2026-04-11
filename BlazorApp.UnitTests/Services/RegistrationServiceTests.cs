@@ -1,4 +1,5 @@
 using BlazorApp.Data.Enums;
+using BlazorApp.Models;
 using BlazorApp.Services.Implementation;
 using BlazorApp.UnitTests.Helpers;
 using FluentAssertions;
@@ -7,6 +8,62 @@ namespace BlazorApp.UnitTests.Services;
 
 public class RegistrationServiceTests
 {
+    #region Venue Tests
+
+    [Fact]
+    public async Task CreateRegistrationAsync_ShouldPreserveVenue_WhenSriAlAminSelected()
+    {
+        // Arrange
+        using var context = MockDbContextFactory.CreateMockContext();
+        var service = new RegistrationService(context);
+        var model = TestDataBuilder.CreateTestRegistrationFormModel(
+            selectedVenue: Venue.SriAlAminCherasSelatan,
+            classSlot: "Rabu, 3:00 ptg - 3:30 ptg");
+
+        // Act
+        var result = await service.CreateRegistrationAsync(model);
+
+        // Assert
+        result.Venue.Should().Be(Venue.SriAlAminCherasSelatan);
+        result.ClassSlot.Should().Be("Rabu, 3:00 ptg - 3:30 ptg");
+    }
+
+    [Fact]
+    public async Task CreateRegistrationAsync_ShouldSetClassSlotNull_WhenPrimaSaujanaSelected()
+    {
+        // Arrange
+        using var context = MockDbContextFactory.CreateMockContext();
+        var service = new RegistrationService(context);
+        var model = TestDataBuilder.CreateTestRegistrationFormModel(
+            selectedVenue: Venue.PrimaSaujanaKajang,
+            classSlot: "Some slot"); // This should be ignored
+
+        // Act
+        var result = await service.CreateRegistrationAsync(model);
+
+        // Assert
+        result.Venue.Should().Be(Venue.PrimaSaujanaKajang);
+        result.ClassSlot.Should().BeNull(); // No slot selection for Prima Saujana
+    }
+
+    [Fact]
+    public async Task CreateRegistrationAsync_ShouldPreserveClassSlot_WhenVenueHasSlotSelection()
+    {
+        // Arrange
+        using var context = MockDbContextFactory.CreateMockContext();
+        var service = new RegistrationService(context);
+        var model = TestDataBuilder.CreateTestRegistrationFormModel(
+            selectedVenue: Venue.SriAlAminCherasSelatan,
+            classSlot: "Sabtu, 12:00 tghari - 12:30 tghari");
+
+        // Act
+        var result = await service.CreateRegistrationAsync(model);
+
+        // Assert
+        result.ClassSlot.Should().Be("Sabtu, 12:00 tghari - 12:30 tghari");
+    }
+
+    #endregion
     [Fact]
     public async Task CreateRegistrationAsync_ShouldCreateRegistration_WhenValidModel()
     {
@@ -22,6 +79,7 @@ public class RegistrationServiceTests
         result.Should().NotBeNull();
         result.StudentName.Should().Be(model.StudentName);
         result.GuardianEmail.Should().Be(model.GuardianEmail);
+        result.Venue.Should().Be(model.SelectedVenue!.Value);
         result.ClassSlot.Should().Be(model.ClassSlot);
         result.Status.Should().Be(RegistrationStatus.Pending);
         result.ReferenceNumber.Should().StartWith("NR-");
