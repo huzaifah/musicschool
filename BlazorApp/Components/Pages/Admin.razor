@@ -53,8 +53,14 @@
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="card-kawaii text-center">
-                    <h4 style="color: var(--kawaii-pink-dark);">@registrations.Count</h4>
-                    <small class="text-muted">Jumlah Pendaftaran</small>
+                    <h4 style="color: var(--kawaii-mint-dark);">@activeCount</h4>
+                    <small class="text-muted">Pendaftaran Aktif</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-kawaii text-center">
+                    <h4 style="color: var(--kawaii-peach-dark);">@cancelledCount</h4>
+                    <small class="text-muted">Dibatalkan</small>
                 </div>
             </div>
             @foreach (var slot in slotSummary)
@@ -257,6 +263,8 @@
     private List<Registration> registrations = new();
     private List<Registration> filteredRegistrations = new();
     private Dictionary<string, int> slotSummary = new();
+    private int activeCount = 0;
+    private int cancelledCount = 0;
     private Registration? selectedRegistration;
     private System.Timers.Timer? debounceTimer;
 
@@ -306,6 +314,8 @@
         registrations = await AdminService.GetAllRegistrationsAsync();
         filteredRegistrations = registrations;
         slotSummary = await AdminService.GetSlotSummaryAsync();
+        activeCount = await AdminService.GetActiveRegistrationCountAsync();
+        cancelledCount = await AdminService.GetCancelledRegistrationCountAsync();
         isLoading = false;
     }
 

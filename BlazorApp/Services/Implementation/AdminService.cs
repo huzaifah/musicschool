@@ -79,9 +79,24 @@ public class AdminService : IAdminService
     {
         return await _context.Registrations
             .AsNoTracking()
+            .Where(r => r.Status != RegistrationStatus.Cancelled)
             .GroupBy(r => r.ClassSlot ?? "Tidak ditetapkan")
             .Select(g => new { Slot = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Slot, x => x.Count);
+    }
+
+    public async Task<int> GetActiveRegistrationCountAsync()
+    {
+        return await _context.Registrations
+            .AsNoTracking()
+            .CountAsync(r => r.Status != RegistrationStatus.Cancelled);
+    }
+
+    public async Task<int> GetCancelledRegistrationCountAsync()
+    {
+        return await _context.Registrations
+            .AsNoTracking()
+            .CountAsync(r => r.Status == RegistrationStatus.Cancelled);
     }
 
     public async Task<bool> UpdateStatusAsync(Guid id, RegistrationStatus status)

@@ -23,9 +23,19 @@ public interface IAdminService
     Task<List<Registration>> SearchRegistrationsAsync(string? searchTerm, string? slotFilter, string? venueFilter = null);
 
     /// <summary>
-    /// Dapatkan ringkasan bilangan pendaftaran mengikut slot
+    /// Dapatkan ringkasan bilangan pendaftaran mengikut slot (tidak termasuk yang dibatalkan)
     /// </summary>
     Task<Dictionary<string, int>> GetSlotSummaryAsync();
+
+    /// <summary>
+    /// Dapatkan bilangan pendaftaran aktif (tidak termasuk yang dibatalkan)
+    /// </summary>
+    Task<int> GetActiveRegistrationCountAsync();
+
+    /// <summary>
+    /// Dapatkan bilangan pendaftaran yang dibatalkan
+    /// </summary>
+    Task<int> GetCancelledRegistrationCountAsync();
 
     /// <summary>
     /// Kemas kini status pendaftaran
